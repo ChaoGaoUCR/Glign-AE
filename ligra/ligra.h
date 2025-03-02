@@ -1249,6 +1249,27 @@ void glign(int argc, char* argv[]) {
   }
 }
 
+void versionTest(int argc, char* argv[])
+{
+  commandLine P(argc,argv," <inFile>");
+  char* iFile = P.getArgument(0);
+  intE batchNum = P.getOptionIntValue("-batchNum", 0);
+  double batchRatio = P.getOptionDoubleValue("-batchRatio", 0.0);
+  cout << "graph file name: " << iFile << endl;
+  cout << "batchNum: " << batchNum << endl;
+  cout << "batchRatio: " << batchRatio << endl;
+  graph<asymmetricVertex> G = readGraph<asymmetricVertex>(iFile, false, false, false, false, batchNum, batchRatio); //asymmetric graph
+  cout << "n=" << G.n << " m=" << G.m << endl;
+  cout << "BatchNum: " << G.batchNum << " BatchSize: " << G.batchSize << endl;
+  for (intE i = 0; i < G.batchNum + 1; i++) {
+    fprintf(stderr, "version %ld has %ld edges From Out Neighbor search\n", i, G.countOutVersionNumber(i));
+  }
+  for (intE i = 0; i < G.batchNum + 1; i++) {
+    fprintf(stderr, "version %ld has %ld edges From IN Neighbor search\n", i, G.countInVersionNumber(i));
+  }  
+  G.del();
+}
+
 // for testing iBFS heuristic
 void iBFS(int argc, char* argv[]) {
   commandLine P(argc,argv," [-s] <inFile>");
@@ -1586,6 +1607,11 @@ int parallel_main(int argc, char* argv[]) {
     glign(argc, argv);
   }
 
+  if (options == "version-test") {
+    cout << "version-test-begin\n";
+    versionTest(argc, argv);
+    // query_generation_skew(argc, argv);
+  }
   // if (options == "cgq") {
   //   cout << "testing async concurrent query processing on Ligra.\n";
   //   test_cgq(argc, argv);

@@ -2,15 +2,83 @@
 #define GRAPH_H
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <algorithm>
+#include <random>
 #include <stdlib.h>
 #include "vertex.h"
 #include "compressedVertex.h"
 #include "parallel.h"
 using namespace std;
-
+const intE commonTag = 666;
 // **************************************************************
 //    ADJACENCY ARRAY REPRESENTATION
 // **************************************************************
+
+namespace graphUtils
+{
+
+  std::vector<intE> generate_unique_random_numbers(intE n, intE N, intE seed) 
+{
+    std::vector<intE> numbers(N);
+    std::iota(numbers.begin(), numbers.end(), 0); // Fill with 0, 1, ..., N-1
+
+    std::default_random_engine engine(seed);
+    std::shuffle(numbers.begin(), numbers.end(), engine);
+
+    numbers.resize(n); // Keep only the first n numbers
+    return numbers;
+}
+  
+  intE encodeTag(intE batch, bool del_flag, bool dynamic_flag) {
+    intE encoded_value = 0;
+    
+    // Encode batch as binary (direct value)
+    encoded_value |= (batch << 2);
+    
+    // Encode del_flag and dynamic_flag at the last two bits
+    encoded_value |= (del_flag ? 1ULL : 0ULL) << 1;
+    encoded_value |= (dynamic_flag ? 1ULL : 0ULL);
+    
+    return encoded_value;
+}
+
+  // Decode function
+  void decodeTag(intE encoded_value, bool &del_flag, bool &dynamic_flag, intE &batch) {
+      if (encoded_value == commonTag)
+      {
+          dynamic_flag = false;
+          return;
+      }
+      // Extract flags
+      del_flag = (encoded_value >> 1) & 1;
+      dynamic_flag = encoded_value & 1;
+      
+      // Extract batch (binary decoding)
+      batch = (encoded_value >> 2);
+  }
+
+  bool validate(intE snapshotNum, intE totalBatchNum, intE encoded_value) {
+      if (encoded_value == commonTag || snapshotNum == commonTag) {
+          return encoded_value == commonTag;
+      }
+      bool del_flag, dynamic_flag;
+      intE batch;
+      decodeTag(encoded_value, del_flag, dynamic_flag, batch);
+      return dynamic_flag && ((del_flag && batch >= snapshotNum && batch < totalBatchNum) || (!del_flag && batch < snapshotNum));
+  }
+
+  bool validate_add(intE batchNumber, intE encoded_value) {
+      if (encoded_value == commonTag) {
+          return true;
+      }
+      bool del_flag, dynamic_flag;
+      intE batch;
+      decodeTag(encoded_value, del_flag, dynamic_flag, batch);
+      return !del_flag && batch <= batchNumber;
+  }
+}
+
 
 // Class that handles implementation specific freeing of memory
 // owned by the graph
@@ -101,11 +169,16 @@ struct graph {
   long n;
   long m;
   bool transposed;
+  intE batchNum = 0;
+  intE batchSize = 0;
   uintE* flags;
   Deletable *D;
 
 graph(vertex* _V, long _n, long _m, Deletable* _D) : V(_V), n(_n), m(_m),
   D(_D), flags(NULL), transposed(0) {}
+
+  graph(vertex* _V, long _n, long _m, Deletable* _D, intE _batchNum, intE _batchSize) : V(_V), n(_n), m(_m),
+  D(_D), flags(NULL), transposed(0), batchNum(_batchNum), batchSize(_batchSize) {}
 
 graph(vertex* _V, long _n, long _m, Deletable* _D, uintE* _flags) : V(_V),
   n(_n), m(_m), D(_D), flags(_flags), transposed(0) {}
@@ -125,6 +198,64 @@ graph(vertex* _V, long _n, long _m, Deletable* _D, uintE* _flags) : V(_V),
       transposed = !transposed;
     }
   }
+
+  void setBatchNum(intE batchNum, intE batchSize) {
+    this->batchNum = batchNum;
+    this->batchSize = batchSize;
+  }
+
+  intE getBatchNum()
+  {
+    return batchNum;
+  }
+
+  intE getBatchSize()
+  {
+    return batchSize;
+  }
+
+  intE countOutVersionNumber(intE version)
+  {
+    if (version > batchNum || version < 0)
+    {
+      return -1;
+    }
+    intE count = 0;
+    parallel_for(long i=0;i<n;i++) 
+    {
+      parallel_for(long j=0;j<V[i].getOutDegree();j++) 
+      {
+        auto edgeVersion = V[i].getOutVersion(j);
+        if(graphUtils::validate(version, batchNum, edgeVersion))
+        {
+          writeAdd(&count, static_cast<intE>(1));
+        }
+      }
+    }
+    return count;
+  }
+
+  intE countInVersionNumber(intE version)
+  {
+    if (version > batchNum || version < 0)
+    {
+      return -1;
+    }
+    intE count = 0;
+    parallel_for(long i=0;i<n;i++) 
+    {
+      parallel_for(long j=0;j<V[i].getInDegree();j++) 
+      {
+        auto edgeVersion = V[i].getInVersion(j);
+        if(graphUtils::validate(version, batchNum, edgeVersion))
+        {
+          writeAdd(&count, static_cast<intE>(1));
+        }
+      }
+    }
+    return count;
+  }
+
 };
 
 template <class vertex>

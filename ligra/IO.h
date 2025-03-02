@@ -32,21 +32,28 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <vector>
+#include <algorithm>
+#include <random>
+
 #include "parallel.h"
 #include "blockRadixSort.h"
 #include "quickSort.h"
 #include "utils.h"
 #include "graph.h"
 using namespace std;
-
+// xxxxx add/del_Flag Dynamic_Flag
 typedef pair<uintE,uintE> intPair;
-typedef pair<uintE, pair<uintE,intE> > intTriple;
+typedef pair<uintE, pair<uintE,intE>> intTriple;
+typedef pair<uintE, pair<uintE, pair<uintE,intE>>> intQuad;
 
 template <class E>
 struct pairFirstCmp {
   bool operator() (pair<uintE,E> a, pair<uintE,E> b) {
     return a.first < b.first; }
 };
+
+
 
 template <class E>
 struct getFirst {uintE operator() (pair<uintE,E> a) {return a.first;} };
@@ -161,7 +168,7 @@ words stringToWords(char *Str, long n) {
 }
 
 template <class vertex>
-graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
+graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap, intE batchNum = 0, double batchRatio = 0.0) {
   words W;
   if (mmap) {
     _seq<char> S = mmapStringFromFile(fname);
@@ -192,6 +199,7 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
   long len = W.m -1;
   long n = atol(W.Strings[1]);
   long m = atol(W.Strings[2]);
+  intE batchSize = (intE) (batchRatio * m);
 #ifndef WEIGHTED
   if (len != n + m + 2) {
 #else
@@ -205,16 +213,44 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
 #ifndef WEIGHTED
   uintE* edges = newA(uintE,m);
 #else
+#ifndef VERSIONED
   intE* edges = newA(intE,2*m);
+#else
+  intE* edges = newA(intE,3*m);
 #endif
+#endif
+
+  std::vector<intE> random_selection = graphUtils::generate_unique_random_numbers(2 * batchNum * batchSize, m, 123456);
+  std::cout << "The number of dynamic edges are: " << random_selection.size() <<std::endl;
+  std::vector<intE> E_tag(m);
+
+  parallel_for (intE i = 0; i < m; i++)
+  {
+      E_tag[i] = commonTag;
+  }
+  for (intE batch = 0; batch < batchNum; batch++)
+  {
+      for (intE i = 0; i < batchSize; i++)
+      {
+          // Encode Both addition and deletion edges
+          E_tag[random_selection[batch * batchSize + i]] = graphUtils::encodeTag(batch, false, true);
+          E_tag[random_selection[(batch + batchNum) * batchSize + i]] = graphUtils::encodeTag(batch, true, true);
+      }
+  }    
 
   {parallel_for(long i=0; i < n; i++) offsets[i] = atol(W.Strings[i + 3]);}
   {parallel_for(long i=0; i<m; i++) {
 #ifndef WEIGHTED
       edges[i] = atol(W.Strings[i+n+3]);
 #else
+#ifndef VERSIONED
       edges[2*i] = atol(W.Strings[i+n+3]);
       edges[2*i+1] = atol(W.Strings[i+n+m+3]);
+#else
+      edges[3*i] = atol(W.Strings[i+n+3]); // outNeighbor
+      edges[3*i+1] = atol(W.Strings[i+n+m+3]); // Weight
+      edges[3*i+2] = E_tag[i]; // Tag
+#endif
 #endif
     }}
   //W.del(); // to deal with performance bug in malloc
@@ -228,7 +264,11 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
 #ifndef WEIGHTED
     v[i].setOutNeighbors(edges+o);
 #else
+#ifndef VERSIONED
     v[i].setOutNeighbors(edges+2*o);
+#else
+    v[i].setOutNeighbors(edges+3*o);
+#endif
 #endif
     }}
 
@@ -238,7 +278,11 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
 #ifndef WEIGHTED
     intPair* temp = newA(intPair,m);
 #else
+#ifndef VERSIONED
     intTriple* temp = newA(intTriple,m);
+#else
+    intQuad* temp = newA(intQuad,m);
+#endif
 #endif
     {parallel_for(long i=0;i<n;i++){
       uintT o = offsets[i];
@@ -246,7 +290,11 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
 #ifndef WEIGHTED
 	temp[o+j] = make_pair(v[i].getOutNeighbor(j),i);
 #else
+#ifndef VERSIONED
 	temp[o+j] = make_pair(v[i].getOutNeighbor(j),make_pair(i,v[i].getOutWeight(j)));
+#else
+  temp[o+j] = make_pair(v[i].getOutNeighbor(j),make_pair(i,make_pair(v[i].getOutWeight(j), v[i].getOutVersion(j))));
+#endif
 #endif
       }
       }}
@@ -259,10 +307,18 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
     quickSort(temp,m,pairFirstCmp<uintE>());
 #endif
 #else
+#ifndef VERSIONED
 #ifndef LOWMEM
     intSort::iSort(temp,m,n+1,getFirst<intPair>());
 #else
     quickSort(temp,m,pairFirstCmp<intPair>());
+#endif
+#else
+#ifndef LOWMEM
+    intSort::iSort(temp,m,n+1,getFirst<intTriple>());
+#else
+    quickSort(temp,m,pairFirstCmp<intTriple>());
+#endif
 #endif
 #endif
 
@@ -271,16 +327,30 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
     uintE* inEdges = newA(uintE,m);
     inEdges[0] = temp[0].second;
 #else
+#ifndef VERSIONED
     intE* inEdges = newA(intE,2*m);
     inEdges[0] = temp[0].second.first;
     inEdges[1] = temp[0].second.second;
+#else
+    intE* inEdges = newA(intE,3*m);
+    inEdges[0] = temp[0].second.first;
+    inEdges[1] = temp[0].second.second.first;
+    inEdges[2] = temp[0].second.second.second;
 #endif
+#endif
+
     {parallel_for(long i=1;i<m;i++) {
 #ifndef WEIGHTED
       inEdges[i] = temp[i].second;
 #else
+#ifndef VERSIONED
       inEdges[2*i] = temp[i].second.first;
       inEdges[2*i+1] = temp[i].second.second;
+#else
+      inEdges[3*i] = temp[i].second.first;
+      inEdges[3*i+1] = temp[i].second.second.first;
+      inEdges[3*i+2] = temp[i].second.second.second;
+#endif
 #endif
       if(temp[i].first != temp[i-1].first) {
 	tOffsets[temp[i].first] = i;
@@ -300,13 +370,22 @@ graph<vertex> readGraphFromFile(char* fname, bool isSymmetric, bool mmap) {
 #ifndef WEIGHTED
       v[i].setInNeighbors(inEdges+o);
 #else
+#ifndef VERSIONED
       v[i].setInNeighbors(inEdges+2*o);
+#else
+      v[i].setInNeighbors(inEdges+3*o);
+#endif
 #endif
       }}
 
     free(tOffsets);
+    
     Uncompressed_Mem<vertex>* mem = new Uncompressed_Mem<vertex>(v,n,m,edges,inEdges);
+#ifndef VERSIONED    
     return graph<vertex>(v,n,m,mem);
+#else
+    return graph<vertex>(v,n,m,mem, batchNum, batchSize);
+#endif
   }
   else {
     free(offsets);
@@ -418,16 +497,29 @@ graph<vertex> readGraphFromBinary(char* iFile, bool isSymmetric) {
     uintE* inEdges = newA(uintE,m);
     inEdges[0] = temp[0].second;
 #else
+#ifndef VERSIONED
     intE* inEdges = newA(intE,2*m);
     inEdges[0] = temp[0].second.first;
     inEdges[1] = temp[0].second.second;
+#else
+    intE* inEdges = newA(intE,3*m);
+    inEdges[0] = temp[0].second.first;
+    inEdges[1] = temp[0].second.second;
+    inEdges[2] = commonTag;
+#endif
 #endif
     {parallel_for(long i=1;i<m;i++) {
 #ifndef WEIGHTED
       inEdges[i] = temp[i].second;
 #else
+#ifndef VERSIONED
       inEdges[2*i] = temp[i].second.first;
       inEdges[2*i+1] = temp[i].second.second;
+#else
+      inEdges[3*i] = temp[i].second.first;
+      inEdges[3*i+1] = temp[i].second.second;
+      inEdges[3*i+2] = commonTag;
+#endif
 #endif
       if(temp[i].first != temp[i-1].first) {
 	tOffsets[temp[i].first] = i;
@@ -444,7 +536,11 @@ graph<vertex> readGraphFromBinary(char* iFile, bool isSymmetric) {
 #ifndef WEIGHTED
       v[i].setInNeighbors((uintE*)inEdges+o);
 #else
+#ifndef VERSIONED
       v[i].setInNeighbors((intE*)(inEdges+2*o));
+#else
+      v[i].setInNeighbors((intE*)(inEdges+3*o));
+#endif
 #endif
       }}
     free(tOffsets);
@@ -467,9 +563,9 @@ graph<vertex> readGraphFromBinary(char* iFile, bool isSymmetric) {
 }
 
 template <class vertex>
-graph<vertex> readGraph(char* iFile, bool compressed, bool symmetric, bool binary, bool mmap) {
+graph<vertex> readGraph(char* iFile, bool compressed = false, bool symmetric = false, bool binary = false, bool mmap = false, intE batchNum = 0, double batchRatio = 0.0) {
   if(binary) return readGraphFromBinary<vertex>(iFile,symmetric);
-  else return readGraphFromFile<vertex>(iFile,symmetric,mmap);
+  else return readGraphFromFile<vertex>(iFile,symmetric,mmap,batchNum,batchRatio);
 }
 
 template <class vertex>
