@@ -19,7 +19,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
           auto m = f.update(ngh, v_id);
 #else
+#ifndef VERSIONED
           auto m = f.update(ngh, v_id, v->getInWeight(j));
+#else
+          auto m = f.update(ngh, v_id, v->getInWeight(j), v->getInVersion(j));
+#endif
 #endif
           g(v_id, m);
         }
@@ -32,7 +36,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
           auto m = f.updateAtomic(ngh, v_id);
 #else
+#ifndef VERSIONED
           auto m = f.updateAtomic(ngh, v_id, v->getInWeight(j));
+#else
+          auto m = f.updateAtomic(ngh, v_id, v->getInWeight(j), v->getInVersion(j));          
+#endif
 #endif
           g(v_id, m);
         }
@@ -51,7 +59,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
       auto m = f.updateAtomic(i,ngh);
 #else
+#ifndef VERSIONED
       auto m = f.updateAtomic(i,ngh,v->getOutWeight(j));
+#else
+      auto m = f.updateAtomic(i,ngh,v->getOutWeight(j),v->getOutVersion(j));      
+#endif
 #endif
         g(ngh, m);
       }
@@ -69,7 +81,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
         auto m = f.updateAtomic(i, ngh);
 #else
+#ifndef VERSIONED
         auto m = f.updateAtomic(i, ngh, v->getOutWeight(j));
+#else
+        auto m = f.updateAtomic(i, ngh, v->getOutWeight(j), v->getOutVersion(j));
+#endif
 #endif
         g(ngh, o+j, m);
       } else {
@@ -90,7 +106,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
         auto m = f.updateAtomic(i, ngh);
 #else
+#ifndef VERSIONED
         auto m = f.updateAtomic(i, ngh, v->getOutWeight(j));
+#else
+        auto m = f.updateAtomic(i, ngh, v->getOutWeight(j), v->getOutVersion(j));         
+#endif
 #endif
         bool wrote = g(ngh, o+k, m);
         if (wrote) { k++; }
@@ -111,7 +131,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
         if (f(vtx_id, ngh))
 #else
+#ifndef VERSIONED
         if (f(vtx_id, ngh, v->getOutWeight(i)))
+#else
+        if (f(vtx_id, ngh, v->getOutWeight(i), v->getOutVersion(i)))        
+#endif
 #endif
           ct++;
       }
@@ -129,7 +153,11 @@ namespace decode_uncompressed {
 #ifndef WEIGHTED
           if (f(vtx_id, ngh))
 #else
+#ifndef VERSIONED
           if (f(vtx_id, ngh, v->getOutNeighbor(j)))
+#else
+          if (f(vtx_id, ngh, v->getOutNeighbor(j), v->getOutVersion(j)))          
+#endif
 #endif
             ct++;
         }
@@ -147,10 +175,14 @@ namespace decode_uncompressed {
     uintE d = v->getOutDegree();
     granular_for(j, 0, d, (d > 1000), {
       uintE ngh = v->getOutNeighbor(j);
+#ifdef VERSIONED
+      E val = f(src, ngh, v->getOutWeight(j), v->getOutVersion(j));
+#else      
 #ifdef WEIGHTED
       E val = f(src, ngh, v->getOutWeight(j));
 #else
       E val = f(src, ngh);
+#endif
 #endif
       g(ngh, o+j, val);
     });

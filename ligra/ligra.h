@@ -271,7 +271,8 @@ vertexSubsetData<data> edgeMapData(graph<vertex>& GA, VS &vs, F f,
     outDegrees = sequence::plusReduce(degrees, m);
     if (outDegrees == 0) return vertexSubsetData<data>(numVertices);
   }
-   if (!(fl & no_dense) && m + outDegrees > threshold) {
+   
+  if (!(fl & no_dense) && m + outDegrees > threshold) {
     // cout << "dense mod\n";
     if(degrees) free(degrees);
     if(frontierVertices) free(frontierVertices);
@@ -973,7 +974,13 @@ void ligra_c(int argc, char* argv[]) {
 
   cout << "graph file name: " << iFile << endl;
   cout << "query file name: " << queryFileName << endl;
-
+#ifdef VERSIONED
+  intE batchNum = P.getOptionIntValue("-batchNum", 0);
+  double batchRatio = P.getOptionDoubleValue("-batchRatio", 0.0);
+  cout << "graph file name: " << iFile << endl;
+  cout << "batchNum: " << batchNum << endl;
+  cout << "batchRatio: " << batchRatio << endl;
+#endif
   // Initialization and preprocessing
   std::vector<long> userQueries; 
   long start = -1;
@@ -1014,10 +1021,25 @@ void ligra_c(int argc, char* argv[]) {
   } else {
     // For directed graph...
     cout << "asymmetric graph\n";
+    // graph<asymmetricVertex> G =
+    //   readGraph<asymmetricVertex>(iFile,compressed,symmetric,binary,mmap); //asymmetric graph
+    // cout << "n=" << G.n << " m=" << G.m << endl;
+#ifdef VERSIONED
+graph<asymmetricVertex> G = readGraph<asymmetricVertex>(iFile, false, false, false, false, batchNum, batchRatio); //asymmetric graph
+// for (intE i = 0; i < G.batchNum + 1; i++) {
+//   fprintf(stderr, "version %ld has %ld edges From Out Neighbor search\n", i, G.countOutVersionNumber(i));
+// }
+// for (intE i = 0; i < G.batchNum + 1; i++) {
+//   fprintf(stderr, "version %ld has %ld edges From IN Neighbor search\n", i, G.countInVersionNumber(i));
+// }
+cout << "BatchNum in Graph " << G.batchNum << endl;    
+cout << "n=" << G.n << " m=" << G.m << endl;
+
+#else
     graph<asymmetricVertex> G =
       readGraph<asymmetricVertex>(iFile,compressed,symmetric,binary,mmap); //asymmetric graph
     cout << "n=" << G.n << " m=" << G.m << endl;
-    
+#endif   
     // Streaming...
     vector<long> sortedQueries;
     vector<long> truncatedQueries;
@@ -1248,7 +1270,7 @@ void glign(int argc, char* argv[]) {
     }
   }
 }
-
+#ifdef VERSIONED
 void versionTest(int argc, char* argv[])
 {
   commandLine P(argc,argv," <inFile>");
@@ -1269,6 +1291,7 @@ void versionTest(int argc, char* argv[])
   }  
   G.del();
 }
+#endif
 
 // for testing iBFS heuristic
 void iBFS(int argc, char* argv[]) {
@@ -1609,7 +1632,9 @@ int parallel_main(int argc, char* argv[]) {
 
   if (options == "version-test") {
     cout << "version-test-begin\n";
-    versionTest(argc, argv);
+#ifdef VERSIONED
+    versionTest(argc, argv);  
+#endif
     // query_generation_skew(argc, argv);
   }
   // if (options == "cgq") {

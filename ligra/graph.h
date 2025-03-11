@@ -203,7 +203,7 @@ graph(vertex* _V, long _n, long _m, Deletable* _D, uintE* _flags) : V(_V),
     this->batchNum = batchNum;
     this->batchSize = batchSize;
   }
-
+#ifdef VERSIONED
   intE getBatchNum()
   {
     return batchNum;
@@ -255,7 +255,7 @@ graph(vertex* _V, long _n, long _m, Deletable* _D, uintE* _flags) : V(_V),
     }
     return count;
   }
-
+#endif
 };
 
 template <class vertex>
