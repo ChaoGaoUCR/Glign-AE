@@ -59,6 +59,10 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "ligra.h": "c",
-        "fusion_sssp.C": "cpp"
+        "fusion_sssp.C": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp"
     }
 }

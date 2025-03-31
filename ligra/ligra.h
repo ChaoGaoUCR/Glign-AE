@@ -501,6 +501,10 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>&, vector<long>, comman
 template<class vertex>
 pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>&, vector<long>, commandLine, bool should_profile=false);
 template<class vertex>
+pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>&, vector<long>, commandLine, vector<int>, bool should_profile=false);
+template<class vertex>
+pair<double, double> Compute_Base_Skipping_Time(graph<vertex>&, vector<long>, commandLine, bool should_profile=false);
+template<class vertex>
 pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>&, vector<long>, queue<long>&, commandLine, bool should_profile=false);
 template<class vertex>
 pair<size_t, size_t> Compute_Chunk_Concurrent(graph<vertex>&, vector<long>&, intE*, bool*, bool*, long, long, commandLine, bool should_profile=false);
@@ -896,13 +900,17 @@ vector<pair<size_t, size_t>> bufferStreamingSkipping(graph<vertex>& G, std::vect
   bool shouldDelay = P.getOptionValue("-delay");
   long selection = P.getOptionLongValue("-mode",1);
   vector<pair<size_t, size_t>> res;
+  vector<pair<double, double>> resTime;
   double batching_time = 0;
   for (int i = 0; i < bufferedQueries.size(); i=i+bSize) {
     std::vector<long> tmpBatch;
     for (int j = 0; j < bSize; j++) {
       tmpBatch.push_back(bufferedQueries[i+j]);
     }
-    if (shouldDelay) {
+    std:: cout << "================================================\n";
+    std::cout << "New batch begins" << std::endl;
+    if (shouldDelay) 
+    {
       // cout << "with delaying\n";
       // Delayed batching
       vector<int> dist_to_high;
@@ -931,19 +939,31 @@ vector<pair<size_t, size_t>> bufferStreamingSkipping(graph<vertex>& G, std::vect
 
       timer t_delay;
       t_delay.start();
+#ifndef VERSIONED      
       pair<size_t, size_t> share_cnt = Compute_Delay_Skipping(G,tmpBatch,P,dist_to_high);
+      res.push_back(share_cnt);
+#else
+      pair<double, double> TimeRecord = Compute_Delay_Skipping_Time(G,tmpBatch,P,dist_to_high);
+      resTime.push_back(TimeRecord);
+#endif 
       t_delay.stop();
       double time1 = t_delay.totalTime;
-      batching_time += time1;
-      res.push_back(share_cnt);
-    } else {
+      batching_time += time1; 
+    } 
+    else 
+    {
       timer t_t1;
       t_t1.start();
+#ifndef VERSIONED      
       pair<size_t, size_t> share_cnt = Compute_Base_Skipping(G,tmpBatch,P,true);
+      res.push_back(share_cnt);
+#else
+      pair<double, double> TimeRecord = Compute_Base_Skipping_Time(G,tmpBatch,P,true);
+      resTime.push_back(TimeRecord);
+#endif      
       t_t1.stop();
       double time1 = t_t1.totalTime;
       batching_time += time1;
-      res.push_back(share_cnt);
     }
   }
   string outstr = "Glign";
@@ -952,7 +972,15 @@ vector<pair<size_t, size_t>> bufferStreamingSkipping(graph<vertex>& G, std::vect
   if (selection == 2 && shouldDelay) outstr = "Glign-Inter";
   if (selection == 3 && !shouldDelay) outstr = "Glign-Batch";
   if (selection == 3 && shouldDelay) outstr = "Glign";
-
+#ifdef VERSIONED
+  double baselineTime = 0;
+  double batchingTime = 0;
+  for (int i = 0; i < resTime.size(); i++) {
+    baselineTime += resTime[i].second;
+    batchingTime += resTime[i].first;
+  }
+  std::cout << "speedup: " << baselineTime / batchingTime << std::endl;
+#endif
   cout << outstr + " evaluation time: " << batching_time << endl;
   return res;
 }

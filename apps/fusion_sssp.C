@@ -714,6 +714,7 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
   std::cout << "Total Number of Version is " << totalVersion << std::endl;
   auto parallelVersionNum = P.getOptionIntValue("-parallelVersion", 4);
   double total_propagation_time = 0.0;
+  double baseTime = 0.0;
 
   for (intE versionStart = 0; versionStart < totalVersion; versionStart += parallelVersionNum) {
     intE versionNum = std::min<intE>(parallelVersionNum, totalVersion - versionStart);
@@ -800,11 +801,9 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
     std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
-
     Frontier.del();
 
 #ifdef VERSIONED
-    /*
     for (intE query = 0; query < batch_size; query++) {
       intE src = vecQueries[query];
       for (intE v = 0; v < versionNum; v++) {
@@ -820,7 +819,8 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
         tmpVal[src] = 0;
         tmpFrontier[src] = true;
         vertexSubset Frontier_tmp(n, tmpFrontier);
-
+        timer baseTimer;
+        baseTimer.start();
         while (!Frontier_tmp.isEmpty()) {
           vertexSubset output = edgeMap(G, Frontier_tmp,
             DJ_SINGLE_F(tmpVal, version, totalVersion),
@@ -828,26 +828,29 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
           Frontier_tmp.del();
           Frontier_tmp = output;
         }
+        baseTimer.stop();
+        baseTime += baseTimer.totalTime;
         Frontier_tmp.del();
-
-        intE error = 0;
-        for (intE node = 0; node < n; node++) {
-          IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
-          if (ShortestPathLen[idx] != tmpVal[node]) {
-            error++;
-          }
-        }
-        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;
+        // intE error = 0;
+        // for (intE node = 0; node < n; node++) {
+        //   IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
+        //   if (ShortestPathLen[idx] != tmpVal[node]) {
+        //     error++;
+        //   }
+        // }
+        // std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;
         pbbs::delete_array(tmpVal, n);
       }
     }
-    */
+    
     pbbs::delete_array(versionNumArray, versionNum);
 #endif
     pbbs::delete_array(ShortestPathLen, totalNumVertices);
   }
 #ifdef VERSIONED
   std::cout << "\nTotal propagation time (excluding baseline): " << total_propagation_time << " seconds\n";
+  std::cout << "Total baseline time: " << baseTime << " seconds\n";
+  std::cout << "Speedup: " << baseTime / total_propagation_time << std::endl;
 #endif
   return make_pair(0, 0); // totalActivated, totalNoOverlap
 }
@@ -956,66 +959,6 @@ pair<size_t, size_t> Compute_Delay(graph<vertex>& G, std::vector<long> vecQuerie
   return make_pair(totalActivated, 0);
 }
 
-// template <class vertex>
-// pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G, std::vector<long> vecQueries, commandLine P, std::vector<int> defer_vec, bool should_profile) 
-// {
-//   size_t n = G.n;
-//   size_t edge_count = G.m;
-//   long batch_size = vecQueries.size();
-//   IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size;
-//   intE* ShortestPathLen = pbbs::new_array<intE>(totalNumVertices);
-//   bool* frontier = pbbs::new_array<bool>(n);
-//   parallel_for(size_t i = 0; i < n; i++) {
-//     frontier[i] = false;
-//   }
-//   // for delaying initialization
-//   for(long i = 0; i < batch_size; i++) {
-//     if (defer_vec[i] == 0) {
-//       frontier[vecQueries[i]] = true;
-//     }
-//   }
-//   // for(long i = 0; i < batch_size; i++) {
-//   //   frontier[vecQueries[i]] = true;
-//   // }
-//   parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-//     ShortestPathLen[i] = (intE)MAXPATH;
-//   }
-//   for(long i = 0; i < batch_size; i++) {
-//     ShortestPathLen[(IdxType)batch_size * (IdxType)vecQueries[i] + (IdxType)i] = 0;
-//   }
-
-//   vertexSubset Frontier(n, frontier);
-
-//   // for profiling
-//   long iteration = 0;
-//   size_t totalActivated = 0;
-//   while(!Frontier.isEmpty()){
-//     iteration++;
-//     totalActivated += Frontier.size();
-//     // cout << "iteration: " << Frontier.size() << endl;
-//     // mode: no_dense, remove_duplicates (for batch size > 1)
-//     vertexSubset output = edgeMap(G, Frontier, DJ_SKIP_F(ShortestPathLen, batch_size), -1, no_dense|remove_duplicates);
-//     Frontier.del();
-//     Frontier = output;
-    
-//     Frontier.toDense();
-//     bool* new_d = Frontier.d;
-//     Frontier.d = nullptr;
-//     for(long i = 0; i < batch_size; i++) {
-//       if (defer_vec[i] == iteration) {
-//         new_d[vecQueries[i]] = true;
-//       }
-//     }
-//     vertexSubset Frontier_new(n, new_d);
-//     Frontier.del();
-//     Frontier = Frontier_new;
-//   }
-
-//   Frontier.del();
-//   pbbs::delete_array(ShortestPathLen, totalNumVertices);
-//   return make_pair(totalActivated, 0);
-// }
-
 template <class vertex>
 pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
   std::vector<long> vecQueries, commandLine P,
@@ -1120,4 +1063,289 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
   std::cout << "\nTotal propagation time (excluding baseline): " << total_propagation_time << " seconds\n";
 #endif
   return make_pair(0, 0);
+}
+
+// This function is modified to compute for batch of queries with different versions
+// Value Array now is [node0_{version 0}, node0_{version 1}, node0_{version 2}, node1_{version 0}, node1_{version 1}, node1_{version 2}, ...]
+template <class vertex>
+pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G, 
+  std::vector<long> vecQueries, commandLine P, bool should_profile) 
+{
+#ifdef VERSIONED
+  auto totalVersion = G.batchNum;
+  std::cout << "Number of Nodes in the graph is " << G.n << std::endl;
+  std::cout << "Number of Edges in the graph is " << G.m << std::endl;
+  std::cout << "Total Number of Version is " << totalVersion << std::endl;
+  auto parallelVersionNum = P.getOptionIntValue("-parallelVersion", 4);
+  double total_propagation_time = 0.0;
+  double baseTime = 0.0;
+
+  for (intE versionStart = 0; versionStart < totalVersion; versionStart += parallelVersionNum) {
+    intE versionNum = std::min<intE>(parallelVersionNum, totalVersion - versionStart);
+    intE* versionNumArray = newA(intE, versionNum);
+    for (intE i = 0; i < versionNum; i++) {
+      versionNumArray[i] = versionStart + i;
+    }
+
+    std::cout << "\n=== Processing version subset: ";
+    for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
+    std::cout << "===\n";
+#endif
+
+    size_t n = G.n;
+    size_t edge_count = G.m;
+    long batch_size = vecQueries.size();
+#ifndef VERSIONED
+    IdxType totalNumVertices = (IdxType)n * (IdxType)versionNum;
+#else
+    IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)versionNum;
+#endif
+    intE* ShortestPathLen = pbbs::new_array<intE>(totalNumVertices);
+    bool* frontier = pbbs::new_array<bool>(n);
+
+    parallel_for(size_t i = 0; i < n; i++) frontier[i] = false;
+    for (long i = 0; i < batch_size; i++) frontier[vecQueries[i]] = true;
+
+    parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
+      ShortestPathLen[i] = (intE)MAXPATH;
+    }
+
+#ifndef VERSIONED
+    for (long i = 0; i < batch_size; i++) {
+      uintE src = vecQueries[i];
+      for (intE v = 0; v < versionNum; v++) {
+        IdxType idx = ((IdxType)src * versionNum + v);
+        ShortestPathLen[idx] = 0;
+      }
+    }
+#else
+    for (long i = 0; i < batch_size; i++) {
+      uintE src = vecQueries[i];
+      for (intE v = 0; v < versionNum; v++) {
+        IdxType idx = ((IdxType)src * batch_size + i) * versionNum + v;
+        ShortestPathLen[idx] = 0;
+      }
+    }
+#endif
+
+    vertexSubset Frontier(n, frontier);
+
+    long iteration = 0;
+    size_t totalActivated = 0;
+    size_t totalNoOverlap = 0;
+
+#ifdef VERSIONED
+    timer t_propagate;
+    t_propagate.start();
+#endif
+
+    while (!Frontier.isEmpty()) {
+      iteration++;
+      totalActivated += Frontier.size();
+#ifndef VERSIONED
+      vertexSubset output = edgeMap(G, Frontier, DJ_SKIP_F(ShortestPathLen, batch_size), -1, no_dense | remove_duplicates);
+#else
+      vertexSubset output = edgeMap(G, Frontier,
+        DJ_SKIP_F(ShortestPathLen, batch_size, totalVersion, versionNum, versionNumArray),
+        -1, no_dense | remove_duplicates);
+#endif
+      Frontier.del();
+      Frontier = output;
+
+      Frontier.toDense();
+      bool* new_d = Frontier.d;
+      Frontier.d = nullptr;
+      vertexSubset Frontier_new(n, new_d);
+      Frontier.del();
+      Frontier = Frontier_new;
+    }
+
+#ifdef VERSIONED
+    t_propagate.stop();
+    std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
+    total_propagation_time += t_propagate.totalTime;
+#endif
+    Frontier.del();
+
+#ifdef VERSIONED
+    for (intE query = 0; query < batch_size; query++) {
+      intE src = vecQueries[query];
+      for (intE v = 0; v < versionNum; v++) {
+        intE version = versionNumArray[v];
+        intE* tmpVal = pbbs::new_array<intE>(n);
+        bool* tmpFrontier = pbbs::new_array<bool>(n);
+
+        parallel_for(size_t i = 0; i < n; i++) {
+          tmpVal[i] = (intE)MAXPATH;
+          tmpFrontier[i] = false;
+        }
+
+        tmpVal[src] = 0;
+        tmpFrontier[src] = true;
+        vertexSubset Frontier_tmp(n, tmpFrontier);
+        timer baseTimer;
+        baseTimer.start();
+        while (!Frontier_tmp.isEmpty()) {
+          vertexSubset output = edgeMap(G, Frontier_tmp,
+            DJ_SINGLE_F(tmpVal, version, totalVersion),
+            -1, no_dense | remove_duplicates);
+          Frontier_tmp.del();
+          Frontier_tmp = output;
+        }
+        baseTimer.stop();
+        baseTime += baseTimer.totalTime;
+        Frontier_tmp.del();
+        pbbs::delete_array(tmpVal, n);
+      }
+    }
+    
+    pbbs::delete_array(versionNumArray, versionNum);
+#endif
+    pbbs::delete_array(ShortestPathLen, totalNumVertices);
+  }
+#ifdef VERSIONED
+  return make_pair(total_propagation_time, baseTime);
+#else
+  return make_pair(0.0, 0.0);
+#endif  
+}
+
+template <class vertex>
+pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
+  std::vector<long> vecQueries, commandLine P,
+  std::vector<int> defer_vec, bool should_profile)
+{
+#ifdef VERSIONED
+  // auto totalVersion = G.batchNum + 1;
+  auto totalVersion = G.batchNum;
+  auto parallelVersionNum = P.getOptionIntValue("-parallelVersion", 4);
+  double total_propagation_time = 0.0;
+  double baseTime = 0.0;
+
+  for (intE versionStart = 0; versionStart < totalVersion; versionStart += parallelVersionNum) {
+    intE versionNum = std::min<intE>(parallelVersionNum, totalVersion - versionStart);
+    intE* versionNumArray = newA(intE, versionNum);
+    for (intE i = 0; i < versionNum; i++) {
+      versionNumArray[i] = versionStart + i;
+    }
+
+    std::cout << "\n=== Processing version subset: ";
+    for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
+    std::cout << "===\n";
+#endif
+
+    size_t n = G.n;
+    long batch_size = vecQueries.size();
+    IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)versionNum;
+
+    intE* ShortestPathLen = pbbs::new_array<intE>(totalNumVertices);
+    bool* frontier = pbbs::new_array<bool>(n);
+
+    parallel_for(size_t i = 0; i < n; i++) {
+      frontier[i] = false;
+    }
+
+    for (long i = 0; i < batch_size; i++) {
+      if (defer_vec[i] == 0) {
+        frontier[vecQueries[i]] = true;
+      }
+    }
+
+    parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
+      ShortestPathLen[i] = (intE)MAXPATH;
+    }
+
+    for (long i = 0; i < batch_size; i++) {
+      uintE src = vecQueries[i];
+      for (intE v = 0; v < versionNum; v++) {
+        IdxType idx = ((IdxType)src * batch_size + i) * versionNum + v;
+        ShortestPathLen[idx] = 0;
+      }
+    }
+
+    vertexSubset Frontier(n, frontier);
+
+    long iteration = 0;
+    size_t totalActivated = 0;
+
+#ifdef VERSIONED
+    timer t_propagate;
+    t_propagate.start();
+#endif
+
+    while (!Frontier.isEmpty()) {
+      iteration++;
+      totalActivated += Frontier.size();
+
+      vertexSubset output = edgeMap(G, Frontier,
+        DJ_SKIP_F(ShortestPathLen, batch_size, totalVersion, versionNum, versionNumArray),
+        -1, no_dense | remove_duplicates);
+
+      Frontier.del();
+      Frontier = output;
+
+      Frontier.toDense();
+      bool* new_d = Frontier.d;
+      Frontier.d = nullptr;
+
+      for (long i = 0; i < batch_size; i++) {
+        if (defer_vec[i] == iteration) {
+          new_d[vecQueries[i]] = true;
+        }
+      }
+
+      vertexSubset Frontier_new(n, new_d);
+      Frontier.del();
+      Frontier = Frontier_new;
+    }
+
+#ifdef VERSIONED
+    t_propagate.stop();
+    std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
+    total_propagation_time += t_propagate.totalTime;
+#endif
+
+    Frontier.del();
+
+#ifdef VERSIONED
+    for (intE query = 0; query < batch_size; query++) {
+      intE src = vecQueries[query];
+      for (intE v = 0; v < versionNum; v++) {
+        intE version = versionNumArray[v];
+        intE* tmpVal = pbbs::new_array<intE>(n);
+        bool* tmpFrontier = pbbs::new_array<bool>(n);
+
+        parallel_for(size_t i = 0; i < n; i++) {
+          tmpVal[i] = (intE)MAXPATH;
+          tmpFrontier[i] = false;
+        }
+
+        tmpVal[src] = 0;
+        tmpFrontier[src] = true;
+        vertexSubset Frontier_tmp(n, tmpFrontier);
+        timer baseTimer;
+        baseTimer.start();
+        while (!Frontier_tmp.isEmpty()) {
+          vertexSubset output = edgeMap(G, Frontier_tmp,
+            DJ_SINGLE_F(tmpVal, version, totalVersion),
+            -1, no_dense | remove_duplicates);
+          Frontier_tmp.del();
+          Frontier_tmp = output;
+        }
+        baseTimer.stop();
+        baseTime += baseTimer.totalTime;
+        Frontier_tmp.del();
+        pbbs::delete_array(tmpVal, n);
+      }
+    }
+    
+    pbbs::delete_array(versionNumArray, versionNum);
+#endif
+    pbbs::delete_array(ShortestPathLen, totalNumVertices);
+  }
+#ifdef VERSIONED
+  return make_pair(total_propagation_time, baseTime);
+#else
+  return make_pair(0.0, 0.0);
+#endif  
 }
