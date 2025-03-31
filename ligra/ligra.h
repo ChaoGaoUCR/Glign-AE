@@ -952,6 +952,7 @@ vector<pair<size_t, size_t>> bufferStreamingSkipping(graph<vertex>& G, std::vect
   if (selection == 2 && shouldDelay) outstr = "Glign-Inter";
   if (selection == 3 && !shouldDelay) outstr = "Glign-Batch";
   if (selection == 3 && shouldDelay) outstr = "Glign";
+
   cout << outstr + " evaluation time: " << batching_time << endl;
   return res;
 }
@@ -1147,6 +1148,14 @@ void glign(int argc, char* argv[]) {
   cout << "graph file name: " << iFile << endl;
   cout << "query file name: " << queryFileName << endl;
 
+#ifdef VERSIONED
+  intE batchNum = P.getOptionIntValue("-batchNum", 0);
+  double batchRatio = P.getOptionDoubleValue("-batchRatio", 0.0);
+  cout << "graph file name: " << iFile << endl;
+  cout << "batchNum: " << batchNum << endl;
+  cout << "batchRatio: " << batchRatio << endl;
+#endif
+
   // Initialization and preprocessing
   std::vector<long> userQueries; 
   long start = -1;
@@ -1212,6 +1221,7 @@ void glign(int argc, char* argv[]) {
     }
     if (selection == 2) {
       cout << "\n" << outstr << " evaluation..\n";
+      // This function can compute all version results
       share_unsorted = bufferStreamingSkipping(G, truncatedQueries, bSize, P, distances, true);
       for (int i = 0; i < share_unsorted.size(); i++) {
         cout << outstr << " F: " << share_unsorted[i].first << endl;
@@ -1228,9 +1238,15 @@ void glign(int argc, char* argv[]) {
   } else {
     // For directed graph...
     cout << "asymmetric graph\n";
+#ifdef VERSIONED
+  graph<asymmetricVertex> G = readGraph<asymmetricVertex>(iFile, false, false, false, false, batchNum, batchRatio); //asymmetric graph
+  cout << "Dynamic BatchNum in Graph " << G.batchNum << endl;    
+  cout << "n=" << G.n << " m=" << G.m << endl;
+#else
     graph<asymmetricVertex> G =
       readGraph<asymmetricVertex>(iFile,compressed,symmetric,binary,mmap); //asymmetric graph
     cout << "n=" << G.n << " m=" << G.m << endl;
+#endif
     // Streaming...
     vector<long> sortedQueries;
     vector<long> truncatedQueries;
