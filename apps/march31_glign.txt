@@ -1,0 +1,16 @@
+nohup: ignoring input
+Running: batch=64, parallelVersion=16
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.144929

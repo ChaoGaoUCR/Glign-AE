@@ -1,0 +1,664 @@
+nohup: ignoring input
+Running WITH delay: batch=16, parallelVersion=2
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.103412
+
+Glign-Inter evaluation..
+speedup: 1.55769
+batching time: 137.097
+baseline time: 213.555
+Glign-Inter evaluation time: 354.588
+Finished: batch=16, version=2 (with delay)
+----------------------------------------
+Running WITH delay: batch=32, parallelVersion=1
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.104007
+
+Glign-Inter evaluation..
+speedup: 1.39512
+batching time: 160.872
+baseline time: 224.435
+Glign-Inter evaluation time: 390.167
+Finished: batch=32, version=1 (with delay)
+----------------------------------------
+Running WITH delay: batch=8, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 8
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.104604
+
+Glign-Inter evaluation..
+speedup: 2.31313
+batching time: 97.153
+baseline time: 224.728
+Glign-Inter evaluation time: 326.721
+Finished: batch=8, version=8 (with delay)
+----------------------------------------
+Running WITH delay: batch=16, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.0949609
+
+Glign-Inter evaluation..
+speedup: 1.93165
+batching time: 110.426
+baseline time: 213.305
+Glign-Inter evaluation time: 328.34
+Finished: batch=16, version=4 (with delay)
+----------------------------------------
+Running WITH delay: batch=32, parallelVersion=2
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.116234
+
+Glign-Inter evaluation..
+speedup: 1.68815
+batching time: 133.106
+baseline time: 224.703
+Glign-Inter evaluation time: 362.419
+Finished: batch=32, version=2 (with delay)
+----------------------------------------
+Running WITH delay: batch=64, parallelVersion=1
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.096668
+
+Glign-Inter evaluation..
+speedup: 1.36301
+batching time: 164.244
+baseline time: 223.866
+Glign-Inter evaluation time: 392.931
+Finished: batch=64, version=1 (with delay)
+----------------------------------------
+Running WITH delay: batch=8, parallelVersion=16
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 8
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.112848
+
+Glign-Inter evaluation..
+speedup: 2.27459
+batching time: 97.513
+baseline time: 221.802
+Glign-Inter evaluation time: 324.573
+Finished: batch=8, version=16 (with delay)
+----------------------------------------
+Running WITH delay: batch=16, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.096118
+
+Glign-Inter evaluation..
+speedup: 2.14243
+batching time: 107.8
+baseline time: 230.954
+Glign-Inter evaluation time: 344.074
+Finished: batch=16, version=8 (with delay)
+----------------------------------------
+Running WITH delay: batch=32, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.134067
+
+Glign-Inter evaluation..
+speedup: 1.84034
+batching time: 117.782
+baseline time: 216.759
+Glign-Inter evaluation time: 339.671
+Finished: batch=32, version=4 (with delay)
+----------------------------------------
+Running WITH delay: batch=64, parallelVersion=2
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.107081
+
+Glign-Inter evaluation..
+speedup: 1.53576
+batching time: 134.701
+baseline time: 206.87
+Glign-Inter evaluation time: 346.495
+Finished: batch=64, version=2 (with delay)
+----------------------------------------
+Running WITH delay: batch=128, parallelVersion=1
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 128
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.101662
+
+Glign-Inter evaluation..
+speedup: 1.36382
+batching time: 161.141
+baseline time: 219.768
+Glign-Inter evaluation time: 385.899
+Finished: batch=128, version=1 (with delay)
+----------------------------------------
+Running WITH delay: batch=16, parallelVersion=16
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.109765
+
+Glign-Inter evaluation..
+speedup: 2.33266
+batching time: 92.9726
+baseline time: 216.874
+Glign-Inter evaluation time: 316.043
+Finished: batch=16, version=16 (with delay)
+----------------------------------------
+Running WITH delay: batch=32, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.0953131
+
+Glign-Inter evaluation..
+speedup: 2.34699
+batching time: 99.3927
+baseline time: 233.274
+Glign-Inter evaluation time: 339.475
+Finished: batch=32, version=8 (with delay)
+----------------------------------------
+Running WITH delay: batch=64, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.148073
+
+Glign-Inter evaluation..
+speedup: 2.03378
+batching time: 109.192
+baseline time: 222.072
+Glign-Inter evaluation time: 336.717
+Finished: batch=64, version=4 (with delay)
+----------------------------------------
+Running WITH delay: batch=128, parallelVersion=2
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 128
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.631801
+
+Glign-Inter evaluation..
+speedup: 1.70482
+batching time: 129.651
+baseline time: 221.032
+Glign-Inter evaluation time: 356.656
+Finished: batch=128, version=2 (with delay)
+----------------------------------------
+Running WITH delay: batch=256, parallelVersion=1
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 256
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.149972
+
+Glign-Inter evaluation..
+speedup: 1.56596
+batching time: 149.569
+baseline time: 234.218
+Glign-Inter evaluation time: 390.083
+Finished: batch=256, version=1 (with delay)
+----------------------------------------
+Running WITH delay: batch=32, parallelVersion=16
+running batched queries on glign
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+query file name: /home/cgao037/RisGraph/source/sx.txt
+graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 1000
+asymmetric graph
+The number of dynamic edges are: 11594688
+Dynamic BatchNum in Graph 16
+n=6024259 m=36233445
+Profiling cost: 0.105869
+
+Glign-Inter evaluation..
+speedup: 2.87142
+batching time: 81.8548
+baseline time: 235.04
+Glign-Inter evaluation time: 323.924
+Finished: batch=32, version=16 (with delay)
+----------------------------------------
+Running WITHOUT delay: batch=16, parallelVersion=2
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31805 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=16, version=2 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=32, parallelVersion=1
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31808 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=32, version=1 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=8, parallelVersion=8
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 8
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31811 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=8, version=8 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=16, parallelVersion=4
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31814 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=16, version=4 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=32, parallelVersion=2
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31817 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=32, version=2 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=64, parallelVersion=1
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31820 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=64, version=1 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=8, parallelVersion=16
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 8
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31823 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=8, version=16 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=16, parallelVersion=8
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31826 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=16, version=8 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=32, parallelVersion=4
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31829 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=32, version=4 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=64, parallelVersion=2
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31842 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=64, version=2 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=128, parallelVersion=1
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 128
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31845 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=128, version=1 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=16, parallelVersion=16
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31848 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=16, version=16 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=32, parallelVersion=8
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31851 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=32, version=8 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=64, parallelVersion=4
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 64
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31854 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=64, version=4 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=128, parallelVersion=2
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 128
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31857 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=128, version=2 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=256, parallelVersion=1
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 256
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31860 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=256, version=1 (no delay)
+----------------------------------------
+Running WITHOUT delay: batch=32, parallelVersion=16
+running batched queries on glign
+graph file name: 2
+query file name: 
+graph file name: 2
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 0
+batchRatio: 0
+number of random queries: 0
+asymmetric graph
+Unable to open file: 2
+motivation_settings.sh: line 34: 31863 Aborted                 (core dumped) ./fusion_sssp -option glign -batch $batch -max_combination 256 -mode 2
+motivation_settings.sh: line 43: -qf: command not found
+Finished: batch=32, version=16 (no delay)
+----------------------------------------

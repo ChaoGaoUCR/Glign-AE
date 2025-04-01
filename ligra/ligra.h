@@ -907,8 +907,8 @@ vector<pair<size_t, size_t>> bufferStreamingSkipping(graph<vertex>& G, std::vect
     for (int j = 0; j < bSize; j++) {
       tmpBatch.push_back(bufferedQueries[i+j]);
     }
-    std:: cout << "================================================\n";
-    std::cout << "New batch begins" << std::endl;
+    // std:: cout << "================================================\n";
+    // std::cout << "New batch begins" << std::endl;
     if (shouldDelay) 
     {
       // cout << "with delaying\n";
@@ -980,6 +980,8 @@ vector<pair<size_t, size_t>> bufferStreamingSkipping(graph<vertex>& G, std::vect
     batchingTime += resTime[i].first;
   }
   std::cout << "speedup: " << baselineTime / batchingTime << std::endl;
+  std::cout << "batching time: " << batchingTime << std::endl;
+  std::cout << "baseline time: " << baselineTime << std::endl;
 #endif
   cout << outstr + " evaluation time: " << batching_time << endl;
   return res;
@@ -1180,7 +1182,9 @@ void glign(int argc, char* argv[]) {
   intE batchNum = P.getOptionIntValue("-batchNum", 0);
   double batchRatio = P.getOptionDoubleValue("-batchRatio", 0.0);
   cout << "graph file name: " << iFile << endl;
-  cout << "batchNum: " << batchNum << endl;
+  cout << "Total Queries: " << combination_max << endl;
+  cout << "Single queries batch size: " << bSize << endl;
+  cout << "Total Snapshot: " << batchNum << endl;
   cout << "batchRatio: " << batchRatio << endl;
 #endif
 
@@ -1322,7 +1326,7 @@ void versionTest(int argc, char* argv[])
   intE batchNum = P.getOptionIntValue("-batchNum", 0);
   double batchRatio = P.getOptionDoubleValue("-batchRatio", 0.0);
   cout << "graph file name: " << iFile << endl;
-  cout << "batchNum: " << batchNum << endl;
+  cout << "Total Snapshot: " << batchNum << endl;
   cout << "batchRatio: " << batchRatio << endl;
   graph<asymmetricVertex> G = readGraph<asymmetricVertex>(iFile, false, false, false, false, batchNum, batchRatio); //asymmetric graph
   cout << "n=" << G.n << " m=" << G.m << endl;

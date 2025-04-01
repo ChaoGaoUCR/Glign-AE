@@ -723,9 +723,9 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
       versionNumArray[i] = versionStart + i;
     }
 
-    std::cout << "\n=== Processing version subset: ";
-    for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    std::cout << "===\n";
+    // // std::cout << "\n=== Processing version subset: ";
+    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
+    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
@@ -798,7 +798,7 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
+    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
     Frontier.del();
@@ -977,9 +977,9 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
       versionNumArray[i] = versionStart + i;
     }
 
-    std::cout << "\n=== Processing version subset: ";
-    for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    std::cout << "===\n";
+    // std::cout << "\n=== Processing version subset: ";
+    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
+    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
@@ -1049,7 +1049,7 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
+    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
 
@@ -1087,9 +1087,9 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
       versionNumArray[i] = versionStart + i;
     }
 
-    std::cout << "\n=== Processing version subset: ";
-    for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    std::cout << "===\n";
+    // std::cout << "\n=== Processing version subset: ";
+    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
+    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
@@ -1162,7 +1162,7 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
+    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
     Frontier.del();
@@ -1229,9 +1229,9 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
       versionNumArray[i] = versionStart + i;
     }
 
-    std::cout << "\n=== Processing version subset: ";
-    for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    std::cout << "===\n";
+    // std::cout << "\n=== Processing version subset: ";
+    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
+    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
@@ -1301,7 +1301,7 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
+    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
 
