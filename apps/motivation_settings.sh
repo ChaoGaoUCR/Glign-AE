@@ -1,8 +1,7 @@
 #!/bin/bash
 
-GRAPH_PATH=/home/cgao037/graph/sx/stack_snap.adj.weight
-QUERY_FILE=/home/cgao037/RisGraph/source/sx.txt
-
+GRAPH_PATH=/home/cgao037/graph/lj/lj_snap.adj.weight
+QUERY_FILE=/home/cgao037/Glign-AE/query_input/LJ_queries.txt
 # 只保留尚未执行的组合（从你的清单中提取）
 COMBINATIONS=(
   "64 16"

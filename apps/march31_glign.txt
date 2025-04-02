@@ -1,16 +1,254 @@
 nohup: ignoring input
 Running: batch=64, parallelVersion=16
 running batched queries on glign
-graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
-query file name: /home/cgao037/RisGraph/source/sx.txt
-graph file name: /home/cgao037/graph/sx/stack_snap.adj.weight
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
 Total Queries: 256
 Single queries batch size: 64
 Total Snapshot: 16
 batchRatio: 0.01
-number of random queries: 1000
+number of random queries: 57014
 asymmetric graph
-The number of dynamic edges are: 11594688
+The number of dynamic edges are: 22077984
 Dynamic BatchNum in Graph 16
-n=6024259 m=36233445
-Profiling cost: 0.144929
+n=4847571 m=68993773
+Profiling cost: 0.235329
+
+Glign-Inter evaluation..
+speedup: 2.4078
+batching time: 238.731
+baseline time: 574.815
+Glign-Inter evaluation time: 820.16
+Finished: batch=64, version=16
+----------------------------------------
+Running: batch=32, parallelVersion=16
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.222741
+
+Glign-Inter evaluation..
+speedup: 2.75522
+batching time: 236.2
+baseline time: 650.782
+Glign-Inter evaluation time: 892.052
+Finished: batch=32, version=16
+----------------------------------------
+Running: batch=16, parallelVersion=16
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.216427
+
+Glign-Inter evaluation..
+speedup: 2.59706
+batching time: 248.707
+baseline time: 645.909
+Glign-Inter evaluation time: 899.263
+Finished: batch=16, version=16
+----------------------------------------
+Running: batch=256, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 256
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.215771
+
+Glign-Inter evaluation..
+speedup: 2.88933
+batching time: 232.409
+baseline time: 671.507
+Glign-Inter evaluation time: 911.25
+Finished: batch=256, version=8
+----------------------------------------
+Running: batch=128, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 128
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.244698
+
+Glign-Inter evaluation..
+speedup: 2.89401
+batching time: 238.75
+baseline time: 690.945
+Glign-Inter evaluation time: 936.735
+Finished: batch=128, version=8
+----------------------------------------
+Running: batch=32, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.221487
+
+Glign-Inter evaluation..
+speedup: 2.2808
+batching time: 264.376
+baseline time: 602.988
+Glign-Inter evaluation time: 872.151
+Finished: batch=32, version=8
+----------------------------------------
+Running: batch=16, parallelVersion=8
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.218034
+
+Glign-Inter evaluation..
+speedup: 2.2374
+batching time: 283.434
+baseline time: 634.156
+Glign-Inter evaluation time: 921.58
+Finished: batch=16, version=8
+----------------------------------------
+Running: batch=256, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 256
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.214565
+
+Glign-Inter evaluation..
+speedup: 2.68726
+batching time: 251.926
+baseline time: 676.992
+Glign-Inter evaluation time: 934.723
+Finished: batch=256, version=4
+----------------------------------------
+Running: batch=128, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 128
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.232075
+
+Glign-Inter evaluation..
+speedup: 2.45829
+batching time: 260.236
+baseline time: 639.738
+Glign-Inter evaluation time: 905.338
+Finished: batch=128, version=4
+----------------------------------------
+Running: batch=32, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 32
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.22397
+
+Glign-Inter evaluation..
+speedup: 1.90827
+batching time: 310.495
+baseline time: 592.511
+Glign-Inter evaluation time: 907.222
+Finished: batch=32, version=4
+----------------------------------------
+Running: batch=16, parallelVersion=4
+running batched queries on glign
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+query file name: /home/cgao037/Glign-AE/query_input/LJ_queries.txt
+graph file name: /home/cgao037/graph/lj/lj_snap.adj.weight
+Total Queries: 256
+Single queries batch size: 16
+Total Snapshot: 16
+batchRatio: 0.01
+number of random queries: 57014
+asymmetric graph
+The number of dynamic edges are: 22077984
+Dynamic BatchNum in Graph 16
+n=4847571 m=68993773
+Profiling cost: 0.225765
+
+Glign-Inter evaluation..
+speedup: 1.9304
+batching time: 306.045
+baseline time: 590.79
+Glign-Inter evaluation time: 900.332
+Finished: batch=16, version=4
+----------------------------------------
