@@ -1,212 +1,172 @@
-// This code is part of the project "Glign: Taming Misaligned Graph Traversals in Concurrent Graph Processing"
-// Copyright (c) 2022 Xizhe Yin
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights (to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-// #pragma push_macro("VERSIONED")  // 保存当前的 VERSIONED 状态
-// #undef VERSIONED
-#define VERSIONED 1  // 仅在 DJ_F 结构体中启用
+#define VERSIONED 1
 #define WEIGHTED 1
 #include "ligra.h"
 
 using IdxType = long long;
 struct DJ_F {
-  intE* WidestPathVal;
+  intE* NarrowestPathVal;
   bool* CurrActiveArray;
   bool* NextActiveArray;
   long BatchSize;
   intE versionNum;
 
-  // Difference Here is We Need to Update all version result in one update Atomic
-  // Array Should BE Like [node0_{version 0}, node0_{version 1}, node0_{version 2}, node1_{version 0}, node1_{version 1}, node1_{version 2}, ...]
-  // Each Batch Contains version * batch of query * number of nodes
-  DJ_F(intE* _WidestPathVal, bool* _CurrActiveArray, bool* _NextActiveArray, long _BatchSize, intE _versionNum) : 
-    WidestPathVal(_WidestPathVal), CurrActiveArray(_CurrActiveArray), NextActiveArray(_NextActiveArray), BatchSize(_BatchSize), versionNum(_versionNum) {
-      // std::cout << "versionNum: " << versionNum << std::endl;
-      // std::cout << "BatchSize: " << BatchSize << std::endl;
-    }
+  DJ_F(intE* _NarrowestPathVal, bool* _CurrActiveArray, bool* _NextActiveArray, long _BatchSize, intE _versionNum) : 
+    NarrowestPathVal(_NarrowestPathVal), CurrActiveArray(_CurrActiveArray), NextActiveArray(_NextActiveArray), BatchSize(_BatchSize), versionNum(_versionNum) {}
   
-inline bool update(uintE s, uintE d, intE edgeLen, intE versionTag) 
-{ 
-  bool ret = false;
+  inline bool update(uintE s, uintE d, intE edgeLen, intE versionTag) 
+  { 
+    bool ret = false;
 
-  for (int v = 0; v < versionNum; v++) 
-  {  // 版本变化最快
-    if (!graphUtils::validate(v, (versionNum - 1), versionTag)) 
-    {
-      continue;
-    }
-    for (long j = 0; j < BatchSize; j++) 
-    {
+    for (int v = 0; v < versionNum; v++) 
+    {  
+      if (!graphUtils::validate(v, (versionNum - 1), versionTag)) 
+      {
+        continue;
+      }
+      for (long j = 0; j < BatchSize; j++) 
+      {
         IdxType s_index = s * (versionNum * BatchSize) + v + versionNum * j;
         IdxType d_index = d * (versionNum * BatchSize) + v + versionNum * j;
 
         if (CurrActiveArray[s_index]) {
-            intE newValue = std::min(WidestPathVal[s_index], edgeLen);
-            if (WidestPathVal[d_index] < newValue) 
-            {
-                WidestPathVal[d_index] = newValue;
-                NextActiveArray[d_index] = true;
-                ret = true;
-            }
-        }
-    }
-  }
-  return ret;
-}
-
-
-inline bool updateAtomic(uintE s, uintE d, intE edgeLen, intE versionTag) { 
-  bool ret = false;
-
-  for (long j = 0; j < BatchSize; j++) {  // batch 变化最慢
-      for (int v = 0; v < versionNum; v++) {  // version 变化最快
-          if (!graphUtils::validate(v, (versionNum - 1), versionTag)) {
-              continue;
-          }
-          IdxType s_index = s * (versionNum * BatchSize) + v + versionNum * j;
-          IdxType d_index = d * (versionNum * BatchSize) + v + versionNum * j;
-
-          if (CurrActiveArray[s_index]) 
+          intE newValue = std::max(NarrowestPathVal[s_index], edgeLen);
+          if (NarrowestPathVal[d_index] > newValue) 
           {
-              intE newValue = std::min(WidestPathVal[s_index], edgeLen);
-              
-              if (writeMax(&WidestPathVal[d_index], newValue)) {
-                  if (CAS(&NextActiveArray[d_index], false, true)) {
-                      ret = true;
-                  }
-              }
+            NarrowestPathVal[d_index] = newValue;
+            NextActiveArray[d_index] = true;
+            ret = true;
           }
+        }
       }
+    }
+    return ret;
   }
-  return ret;
-}
 
-  //cond function checks if vertex has been visited yet
+  inline bool updateAtomic(uintE s, uintE d, intE edgeLen, intE versionTag) { 
+    bool ret = false;
+
+    for (long j = 0; j < BatchSize; j++) {  
+      for (int v = 0; v < versionNum; v++) {  
+        if (!graphUtils::validate(v, (versionNum - 1), versionTag)) {
+          continue;
+        }
+        IdxType s_index = s * (versionNum * BatchSize) + v + versionNum * j;
+        IdxType d_index = d * (versionNum * BatchSize) + v + versionNum * j;
+
+        if (CurrActiveArray[s_index]) 
+        {
+          intE newValue = std::max(NarrowestPathVal[s_index], edgeLen);
+          
+          if (writeMin(&NarrowestPathVal[d_index], newValue)) {
+            if (CAS(&NextActiveArray[d_index], false, true)) {
+              ret = true;
+            }
+          }
+        }
+      }
+    }
+    return ret;
+  }
+
   inline bool cond (uintE d) { return cond_true(d); } 
 };
 
 struct DJ_SINGLE_F {
-  intE* WidestPathVal;
+  intE* NarrowestPathVal;
   intE targetVersion;
   intE versionNum;
-  DJ_SINGLE_F(intE* _WidestPathVal, intE _targetVersion, intE _versionNum) : 
-    WidestPathVal(_WidestPathVal), targetVersion(_targetVersion), versionNum(_versionNum) {}
+  DJ_SINGLE_F(intE* _NarrowestPathVal, intE _targetVersion, intE _versionNum) : 
+    NarrowestPathVal(_NarrowestPathVal), targetVersion(_targetVersion), versionNum(_versionNum) {}
   
-  inline bool update (uintE s, uintE d, intE edgeLen, intE versionTag = commonTag) { //Update
+  inline bool update (uintE s, uintE d, intE edgeLen, intE versionTag = commonTag) { 
     bool ret = false;
     if (!graphUtils::validate(targetVersion, versionNum - 1, versionTag)) {
       return ret;
     }    
-    intE newValue = std::min(WidestPathVal[s], edgeLen);
-    if (WidestPathVal[d] < newValue) {
-      WidestPathVal[d] = newValue;
+    intE newValue = std::max(NarrowestPathVal[s], edgeLen);
+    if (NarrowestPathVal[d] > newValue) {
+      NarrowestPathVal[d] = newValue;
       ret = true;
     }
     return ret;
   }
   
-  inline bool updateAtomic (uintE s, uintE d, intE edgeLen, intE versionTag = commonTag){ //atomic version of Update
+  inline bool updateAtomic (uintE s, uintE d, intE edgeLen, intE versionTag = commonTag){ 
     bool ret = false;
     if (!graphUtils::validate(targetVersion, versionNum - 1, versionTag)) {
       return ret;
     }
     IdxType s_begin = s;
     IdxType d_begin = d;
-    intE newValue = std::min(WidestPathVal[s], edgeLen);
-    if (writeMax(&WidestPathVal[d], newValue)) {
+    intE newValue = std::max(NarrowestPathVal[s], edgeLen);
+    if (writeMin(&NarrowestPathVal[d], newValue)) {
       ret = true;
     }
     return ret;
   }
-  //cond function checks if vertex has been visited yet
   inline bool cond (uintE d) { return cond_true(d); } 
 };
 
 struct DJ_SKIP_F {
-  intE* WidestPathVal;
+  intE* NarrowestPathVal;
   long BatchSize;
-  // The version being computed here
-  intE totalVersion; //TotalBatch + 1
-  intE parallelVersionNum; // How many versions being batched
+  intE totalVersion;
+  intE parallelVersionNum;
   intE* versionNum;
 
-  DJ_SKIP_F(intE* _WidestPathVal, 
+  DJ_SKIP_F(intE* _NarrowestPathVal, 
             long _BatchSize, 
             intE _totalVersion = 0,
             intE _parallelVersionNum = 0, 
             intE* _versionNum = nullptr) : 
-    WidestPathVal(_WidestPathVal), BatchSize(_BatchSize),
+    NarrowestPathVal(_NarrowestPathVal), BatchSize(_BatchSize),
     totalVersion(_totalVersion),  
-    parallelVersionNum(_parallelVersionNum), versionNum(_versionNum)
-    {
-// #ifdef VERSIONED
-//       std::cout << "versionNum: " << parallelVersionNum << std::endl;
-//       std::cout << "totalVersion: " << totalVersion << std::endl;
-//       std::cout << "Query BatchSize: " << BatchSize << std::endl;
-// #endif
-    }
+    parallelVersionNum(_parallelVersionNum), versionNum(_versionNum) {}
   
   inline bool update(uintE s, uintE d, intE edgeLen, intE versionTag = commonTag) 
   {
-      bool ret = false;
+    bool ret = false;
   
-      for (long j = 0; j < BatchSize; j++) {
-          for (intE v = 0; v < parallelVersionNum; v++) {
-              intE real_version = versionNum[v];
-              if (!graphUtils::validate(real_version, totalVersion - 1, versionTag)) {
-                  continue;
-              }
-              IdxType s_idx = ((IdxType)s * BatchSize + j) * parallelVersionNum + v;
-              IdxType d_idx = ((IdxType)d * BatchSize + j) * parallelVersionNum + v;
-              intE newValue = std::min(WidestPathVal[s_idx], edgeLen);
-              if (WidestPathVal[d_idx] < newValue) {
-                  WidestPathVal[d_idx] = newValue;
-                  ret = true;
-              }
-          }
+    for (long j = 0; j < BatchSize; j++) {
+      for (intE v = 0; v < parallelVersionNum; v++) {
+        intE real_version = versionNum[v];
+        if (!graphUtils::validate(real_version, totalVersion - 1, versionTag)) {
+          continue;
+        }
+        IdxType s_idx = ((IdxType)s * BatchSize + j) * parallelVersionNum + v;
+        IdxType d_idx = ((IdxType)d * BatchSize + j) * parallelVersionNum + v;
+        intE newValue = std::max(NarrowestPathVal[s_idx], edgeLen);
+        if (NarrowestPathVal[d_idx] > newValue) {
+          NarrowestPathVal[d_idx] = newValue;
+          ret = true;
+        }
       }
-      return ret;
+    }
+    return ret;
   }
+
   inline bool updateAtomic(uintE s, uintE d, intE edgeLen, intE versionTag = commonTag) {
     bool ret = false;
     for (long j = 0; j < BatchSize; j++) {
-        for (intE v = 0; v < parallelVersionNum; v++) {
-            intE real_version = versionNum[v];
-            if (!graphUtils::validate(real_version, totalVersion - 1, versionTag)) 
-            {
-                continue;
-            }
-            IdxType s_idx = ((IdxType)s * BatchSize + j) * parallelVersionNum + v;
-            IdxType d_idx = ((IdxType)d * BatchSize + j) * parallelVersionNum + v;
-
-            intE newValue = std::min(WidestPathVal[s_idx], edgeLen);
-
-            if (writeMax(&WidestPathVal[d_idx], newValue)) {
-                ret = true;
-            }
+      for (intE v = 0; v < parallelVersionNum; v++) {
+        intE real_version = versionNum[v];
+        if (!graphUtils::validate(real_version, totalVersion - 1, versionTag)) 
+        {
+          continue;
         }
+        IdxType s_idx = ((IdxType)s * BatchSize + j) * parallelVersionNum + v;
+        IdxType d_idx = ((IdxType)d * BatchSize + j) * parallelVersionNum + v;
+
+        intE newValue = std::max(NarrowestPathVal[s_idx], edgeLen);
+
+        if (writeMin(&NarrowestPathVal[d_idx], newValue)) {
+          ret = true;
+        }
+      }
     }
     return ret;
-}
+  }
 
-  //cond function checks if vertex has been visited yet
   inline bool cond (uintE d) { return cond_true(d); } 
 };
 
@@ -219,91 +179,10 @@ struct BFSLV_F {
   BFSLV_F(uintE* _Levels, bool* _CurrActiveArray, bool* _NextActiveArray, long _BatchSize) : 
     Levels(_Levels), CurrActiveArray(_CurrActiveArray), NextActiveArray(_NextActiveArray), BatchSize(_BatchSize) {}
   
-  inline bool update (uintE s, uintE d, intE edgeLen=1, intE versionTag = commonTag) { //Update
-    bool ret = false;
-    IdxType s_begin = s * BatchSize;
-    IdxType d_begin = d * BatchSize;
-
-    for (long j = 0; j < BatchSize; j++) {
-      if (CurrActiveArray[s_begin + j]) {
-        uintE newValue = Levels[s_begin + j] + 1;
-        if (Levels[d_begin + j] > newValue) {
-          // Visited[d_begin + j] = true;
-          Levels[d_begin + j] = newValue;
-          NextActiveArray[d_begin + j] = true;
-          ret = true;
-        }
-      }
-
-    }
-    return ret;
-  }
-  
-  inline bool updateAtomic (uintE s, uintE d, intE edgeLen=1, intE versionTag = commonTag){ //atomic version of Update
-    bool ret = false;
-    IdxType s_begin = s * BatchSize;
-    IdxType d_begin = d * BatchSize;
-    for (long j = 0; j < BatchSize; j++) {
-      if (CurrActiveArray[s_begin + j]) {
-        uintE newValue = Levels[s_begin + j] + 1;
-        if (writeMin(&Levels[d_begin + j], newValue) && CAS(&NextActiveArray[d_begin + j], false, true)) {
-          ret = true;
-        }
-      }
-    }
-    return ret;
-  }
-  //cond function checks if vertex has been visited yet
-  inline bool cond (uintE d) { return cond_true(d); } 
+  inline bool update (uintE s, uintE d, intE edgeLen=1) { return false; }
+  inline bool updateAtomic (uintE s, uintE d, intE edgeLen=1) { return false; }
+  inline bool cond (uintE d) { return false; } 
 };
-
-template <class vertex>
-uintE* Compute_Eval(graph<vertex>& G, std::vector<long> vecQueries, commandLine P) {
-  size_t n = G.n;
-  size_t edge_count = G.m;
-  long batch_size = vecQueries.size();
-  IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size;
-  uintE* Hops = pbbs::new_array<uintE>(totalNumVertices);
-  bool* CurrActiveArray = pbbs::new_array<bool>(totalNumVertices);
-  bool* NextActiveArray = pbbs::new_array<bool>(totalNumVertices);
-  bool* frontier = pbbs::new_array<bool>(n);
-  parallel_for(size_t i = 0; i < n; i++) {
-    frontier[i] = false;
-  }
-  for(long i = 0; i < batch_size; i++) {
-    frontier[vecQueries[i]] = true;
-  }
-  parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-    Hops[i] = (uintE)MAXLEVEL;
-    CurrActiveArray[i] = false;
-    NextActiveArray[i] = false;
-  }
-  for(long i = 0; i < batch_size; i++) {
-    Hops[(IdxType)batch_size * (IdxType)vecQueries[i] + (IdxType)i] = 0;
-  }
-  parallel_for(size_t i = 0; i < batch_size; i++) {
-    CurrActiveArray[(IdxType)vecQueries[i] * (IdxType)batch_size + (IdxType)i] = true;
-  }
-
-  vertexSubset Frontier(n, frontier);
-  while(!Frontier.isEmpty()){
-    // mode: no_dense, remove_duplicates (for batch size > 1)
-    vertexSubset output = edgeMap(G, Frontier, BFSLV_F(Hops, CurrActiveArray, NextActiveArray, batch_size), -1, no_dense|remove_duplicates);
-
-    Frontier.del();
-    Frontier = output;
-
-    std::swap(CurrActiveArray, NextActiveArray);
-    parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-      NextActiveArray[i] = false;
-    }
-  }
-
-  Frontier.del();
-  pbbs::delete_array(CurrActiveArray, totalNumVertices);
-  pbbs::delete_array(NextActiveArray, totalNumVertices);
-  return Hops;
-}
 
 template <class vertex>
 pair<size_t, size_t> Compute_Base(graph<vertex>& G, std::vector<long> vecQueries, commandLine P, bool should_profile) {
@@ -313,7 +192,7 @@ pair<size_t, size_t> Compute_Base(graph<vertex>& G, std::vector<long> vecQueries
   intE numVersions = G.batchNum + 1;
   IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)numVersions;
   fprintf(stderr, "totalNumVertices: %lld\n", totalNumVertices);
-  intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+  intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
   bool* CurrActiveArray = pbbs::new_array<bool>(totalNumVertices);
   bool* NextActiveArray = pbbs::new_array<bool>(totalNumVertices);
   bool* frontier = pbbs::new_array<bool>(n);
@@ -324,7 +203,7 @@ pair<size_t, size_t> Compute_Base(graph<vertex>& G, std::vector<long> vecQueries
     frontier[vecQueries[i]] = true;
   }
   parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-    WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+    NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     CurrActiveArray[i] = false;
     NextActiveArray[i] = false;
   }
@@ -333,52 +212,30 @@ pair<size_t, size_t> Compute_Base(graph<vertex>& G, std::vector<long> vecQueries
     for (int v = 0; v < numVersions; v++) 
     {
         int idx = vecQueries[i] * (numVersions * batch_size) + v + numVersions * i;
-        WidestPathVal[idx] = (intE)MAXWIDTH;  // Set source nodes to MAXWIDTH
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
     }
   }
 
-for (long i = 0; i < batch_size; i++) 
-{  
+  for (long i = 0; i < batch_size; i++) 
+  {  
     for (int v = 0; v < numVersions; v++) 
     {
         int idx = vecQueries[i] * (numVersions * batch_size) + v + numVersions * i;
         CurrActiveArray[idx] = true;
     }
-}
+  }
 
   vertexSubset Frontier(n, frontier);
 
-  // for profiling
   long iteration = 0;
   size_t totalActivated = 0;
   size_t totalNoOverlap = 0;
-  vector<pair<size_t, double>> affinity_tracking;
-  vector<pair<size_t, double>> affinity_tracking_one;
-  vector<pair<size_t, double>> affinity_tracking_only;
-  size_t* overlaps = pbbs::new_array<size_t>(batch_size);
-
-  for (int i = 0; i < batch_size; i++) {
-    overlaps[i] = 0;
-  }
-
-  vector<double> overlap_scores;
-  size_t accumulated_overlap = 0;
-  size_t accumulated_overlap_one = 0;
-  size_t accumulated_overlap_only= 0;
-  size_t peak_activation = 0;
-  int peak_iter = 0;
-  size_t total_edges = 0;
-  // vector<long> frontier_iterations;
-  // vector<long> overlapped_iterations;
-  // vector<long> accumulated_overlapped_iterations;
-  // vector<long> total_activated_iterations;
 
   while(!Frontier.isEmpty()){
     iteration++;
     totalActivated += Frontier.size();
-    // cout << "iteration: " << Frontier.size() << endl;
-    // mode: no_dense, remove_duplicates (for batch size > 1)
-    vertexSubset output = edgeMap(G, Frontier, DJ_F(WidestPathVal, CurrActiveArray, NextActiveArray, batch_size, numVersions), -1, no_dense|remove_duplicates);
+
+    vertexSubset output = edgeMap(G, Frontier, DJ_F(NarrowestPathVal, CurrActiveArray, NextActiveArray, batch_size, numVersions), -1, no_dense|remove_duplicates);
     Frontier.del();
     Frontier = output;
 
@@ -397,137 +254,9 @@ for (long i = 0; i < batch_size; i++)
   cout << "Total iterations: " << iteration << endl;
 
   Frontier.del();
-  // for(int snapshot = 0; snapshot < G.batchNum; snapshot++)
-  // {
-  //   intE* WidestPathVal_snapshot = pbbs::new_array<intE>(n);
-  //   bool* CurrActiveArray_snapshot = pbbs::new_array<bool>(n);
-  //   bool* NextActiveArray_snapshot = pbbs::new_array<bool>(n);
-  //   bool* frontier_snapshot = pbbs::new_array<bool>(n);
-  //   parallel_for(size_t i = 0; i < n; i++) {
-  //     frontier_snapshot[i] = false;
-  //   }
-  //   for(long i = 0; i < batch_size; i++) {
-  //     frontier_snapshot[vecQueries[i]] = true;
-  //   }
-  //   parallel_for(IdxType i = 0; i < n; i++) {
-  //     WidestPathVal_snapshot[i] = (intE)MAXPATH;
-  //     CurrActiveArray_snapshot[i] = false;
-  //     NextActiveArray_snapshot[i] = false;
-  //   }
-  //   WidestPathVal_snapshot[vecQueries[0]] = 0;
-  //   CurrActiveArray_snapshot[vecQueries[0]] = true;
-
-  //   vertexSubset Frontier_snapshot(n, frontier_snapshot);
-  //   while(!Frontier_snapshot.isEmpty()){
-  //     // mode: no_dense, remove_duplicates (for batch size > 1)
-  //     vertexSubset output = edgeMap(G, Frontier_snapshot, DJ_SINGLE_F(WidestPathVal_snapshot, snapshot, numVersions), -1, no_dense|remove_duplicates);
-  //     Frontier_snapshot.del();
-  //     Frontier_snapshot = output;
-
-  //     Frontier_snapshot.toDense();
-  //     bool* new_d = Frontier_snapshot.d;
-  //     Frontier_snapshot.d = nullptr;
-  //     vertexSubset Frontier_new(n, new_d);
-  //     Frontier_snapshot.del();
-  //     Frontier_snapshot = Frontier_new;
-  //   }
-  //   Frontier_snapshot.del();
-  //   intE same = 0;
-  //   for(intE node = 0; node < n; node++)
-  //   {
-  //     if (WidestPathVal[node * numVersions * batch_size + snapshot * batch_size] == WidestPathVal_snapshot[node]) {
-  //       same++;
-  //   }
-  //   else
-  //   {
-  //     cout << "node: " << node << " snapshot: " << snapshot << " " << WidestPathVal[node * numVersions * batch_size + snapshot * batch_size] << " " << WidestPathVal_snapshot[node] << endl;
-  //   }
-  //   }
-  //   cout << "snapshot " << snapshot << " same: " << same << endl;
-  //   pbbs::delete_array(WidestPathVal_snapshot, n);
-  //   pbbs::delete_array(CurrActiveArray_snapshot, n);
-  //   pbbs::delete_array(NextActiveArray_snapshot, n);
-  // }
-
-  pbbs::delete_array(WidestPathVal, totalNumVertices);
+  pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   pbbs::delete_array(CurrActiveArray, totalNumVertices);
   pbbs::delete_array(NextActiveArray, totalNumVertices);
-  pbbs::delete_array(overlaps, batch_size);
-  return make_pair(totalActivated, totalNoOverlap);
-}
-
-template <class vertex>
-pair<size_t, size_t> Compute_Separate(graph<vertex>& G, std::vector<long> vecQueries, commandLine P, bool should_profile) {
-  size_t n = G.n;
-  size_t edge_count = G.m;
-  long batch_size = vecQueries.size();
-
-  cout << "initializing\n";
-  intE** vals = pbbs::new_array<intE*>(batch_size);
-  bool** frontiers = pbbs::new_array<bool*>(n);
-  for (int i = 0; i < batch_size; i++) {
-    vals[i] = pbbs::new_array<intE>(n);
-    frontiers[i] = pbbs::new_array<bool>(n);
-    parallel_for(IdxType j = 0; j < n; j++) {
-      vals[i][j] = (intE)MAXPATH;
-      frontiers[i][j] = false;
-    }
-    vals[i][(IdxType)vecQueries[i]] = 0;
-    frontiers[i][(IdxType)vecQueries[i]] = true;
-  }
-
-  // for profiling
-  long iteration = 0;
-  size_t totalActivated = 0;
-  size_t totalNoOverlap = 0;
-
-  bool isConverged = true;
-  vertexSubset** vecFs = new vertexSubset*[batch_size];
-  // vector<vertexSubset*> vecFs(batch_size);
-  for (int i = 0; i < batch_size; i++) {
-    // vertexSubset Frontier_new(n, frontiers[i]);
-
-    vecFs[i] = new vertexSubset(n, frontiers[i]);
-    // vecFs.push_back(&Frontier_new);
-    isConverged = isConverged && vecFs[i]->isEmpty();
-  }
-  cout << "finished initializing\n";
-
-  while (!isConverged) {
-    iteration++;
-    // cout << "iteration: " << iteration << endl;
-    parallel_for(int j = 0; j < batch_size; j++) {
-      vertexSubset output = edgeMap(G, *vecFs[j], DJ_SINGLE_F(vals[j], 0 ,0), -1, no_dense|remove_duplicates);
-      vecFs[j]->del();
-      *vecFs[j] = output;
-    }
-    bool isEmpty = true;
-    for (int i = 0; i < batch_size; i++) {
-      isEmpty = isEmpty && vecFs[i]->isEmpty();
-    }
-    isConverged = isEmpty;
-  }
-  // cout << "Total iterations: " << iteration << endl;
-
-#ifdef OUTPUT 
-  for (int i = 0; i < batch_size; i++) {
-    long start = vecQueries[i];
-    char outFileName[300];
-    sprintf(outFileName, "SSSP_separate_output_src%ld.%ld.%ld.out", start, edge_count, batch_size);
-    FILE *fp;
-    fp = fopen(outFileName, "w");
-    for (long j = 0; j < n; j++)
-      fprintf(fp, "%ld %d\n", j, vals[i][j]);
-    fclose(fp);
-  }
-#endif
-
-  // Frontier.del();
-  for (int i = 0; i < batch_size; i++) {
-    vecFs[i]->del();
-    pbbs::delete_array(vals[i], n);
-  }
-
   return make_pair(totalActivated, totalNoOverlap);
 }
 
@@ -537,7 +266,7 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
   size_t edge_count = G.m;
   long batch_size = vecQueries.size();
   IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size;
-  intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+  intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
   bool* CurrActiveArray = pbbs::new_array<bool>(totalNumVertices);
   bool* NextActiveArray = pbbs::new_array<bool>(totalNumVertices);
   bool* frontier = pbbs::new_array<bool>(n);
@@ -548,12 +277,12 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
     frontier[vecQueries[i]] = true;
   }
   parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-    WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+    NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     CurrActiveArray[i] = false;
     NextActiveArray[i] = false;
   }
   for(long i = 0; i < batch_size; i++) {
-    WidestPathVal[(IdxType)batch_size * (IdxType)vecQueries[i] + (IdxType)i] = (intE)MAXWIDTH;  // Set source nodes to MAXWIDTH
+    NarrowestPathVal[(IdxType)batch_size * (IdxType)vecQueries[i] + (IdxType)i] = 0;  // Set source nodes to 0
   }
   for(size_t i = 0; i < batch_size; i++) {
     CurrActiveArray[(IdxType)vecQueries[i] * (IdxType)batch_size + (IdxType)i] = true;
@@ -561,12 +290,10 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
 
   vertexSubset Frontier(n, frontier);
 
-  
   long iteration = 0;
   size_t totalActivated = 0;
   size_t totalNoOverlap = 0;
 
-  // for async batching
   int slots_parameter = P.getOptionIntValue("-slots", 1);
   int empty_slots = 0;
   vector<long> next_batch;
@@ -586,11 +313,9 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
 
   while(!Frontier.isEmpty() || queued_index != queuedQueries.size()){
     iteration++;
-    // cout << "iteration: " << iteration << endl;
     totalActivated += Frontier.size();
 
-    // mode: no_dense, remove_duplicates (for batch size > 1)
-    vertexSubset output = edgeMap(G, Frontier, DJ_F(WidestPathVal, CurrActiveArray, NextActiveArray, batch_size), -1, no_dense|remove_duplicates);
+    vertexSubset output = edgeMap(G, Frontier, DJ_F(NarrowestPathVal, CurrActiveArray, NextActiveArray, batch_size), -1, no_dense|remove_duplicates);
 
     Frontier.del();
     Frontier = output;
@@ -605,14 +330,13 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
       is_batch_finished[i] = false;
     }
     empty_slots = 0;
-    if (queued_index != queuedQueries.size()) { // there are more queries to process
+    if (queued_index != queuedQueries.size()) {
       vector<long> empty_slots_vec;
       for (int i = 0; i < batch_size; i++) {
         bool is_finished = true;
         long active_cnt = 0;
         parallel_for(size_t index = 0; index < n; index++) {
           if (CurrActiveArray[index * batch_size + i]) {
-            // is_finished = false;
             pbbs::fetch_and_add(&active_cnt, 1);
           }
         }
@@ -634,24 +358,14 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
             long nextQ = queuedQueries[queued_index];
             queued_index++;
             int index_in_batch = empty_slots_vec[i];
-            #ifdef OUTPUT 
-              long start = vecQueries[index_in_batch];
-              char outFileName[300];
-              sprintf(outFileName, "SSSP_base_async_output_src%ld.%ld.%ld.out", start, edge_count, batch_size);
-              FILE *fp;
-              fp = fopen(outFileName, "w");
-              for (long j = 0; j < n; j++)
-                fprintf(fp, "%ld %d\n", j, WidestPathVal[j * batch_size + index_in_batch]);
-              fclose(fp);
-            #endif
             vecQueries[index_in_batch] = nextQ;
             finish_status[index_in_batch] = true;
 
             CurrActiveArray[nextQ * batch_size + index_in_batch] = true;
             parallel_for(size_t index = 0; index < n; index++) {
-              WidestPathVal[index * batch_size + index_in_batch] = (intE)0;  // Initialize to 0
+              NarrowestPathVal[index * batch_size + index_in_batch] = (intE)MAXPATH;  // Initialize to MAXPATH
             }
-            WidestPathVal[nextQ * batch_size + index_in_batch] = (intE)MAXWIDTH;  // Set source to MAXWIDTH
+            NarrowestPathVal[nextQ * batch_size + index_in_batch] = 0;  // Set source to 0
 
             Frontier.toDense();
             bool* new_d = pbbs::new_array<bool>(n);
@@ -662,47 +376,19 @@ pair<size_t, size_t> Compute_Base_Dynamic(graph<vertex>& G, std::vector<long> ve
             vertexSubset Frontier_new(n, new_d);
             Frontier.del();
             Frontier = Frontier_new;
-
-            // cout << "iteration: " << iteration << ": inserting " << nextQ << " into the batch\n";
-            // cout << "current empty slots: " << empty_slots << endl;
           }
         }
       }
     }
-    // if (queued_index >= queuedQueries.size() && lastQueries.size() == 0) {
-    //   for (int i = 0; i < batch_size; i++) {
-
-    //   }
-    // }
   }
-
-  // profiling
-  if (should_profile) {
-    
-  }
-
-#ifdef OUTPUT 
-  for (int i = 0; i < batch_size; i++) {
-    long start = vecQueries[i];
-    char outFileName[300];
-    sprintf(outFileName, "SSSP_base_async_output_src%ld.%ld.%ld.out", start, edge_count, batch_size);
-    FILE *fp;
-    fp = fopen(outFileName, "w");
-    for (long j = 0; j < n; j++)
-      fprintf(fp, "%ld %d\n", j, WidestPathVal[j * batch_size + i]);
-    fclose(fp);
-  }
-#endif
 
   Frontier.del();
-  pbbs::delete_array(WidestPathVal, totalNumVertices);
+  pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   pbbs::delete_array(CurrActiveArray, totalNumVertices);
   pbbs::delete_array(NextActiveArray, totalNumVertices);
   return make_pair(totalActivated, totalNoOverlap);
 }
 
-// This function is modified to compute for batch of queries with different versions
-// Value Array now is [node0_{version 0}, node0_{version 1}, node0_{version 2}, node1_{version 0}, node1_{version 1}, node1_{version 2}, ...]
 template <class vertex>
 pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G, 
   std::vector<long> vecQueries, commandLine P, bool should_profile) 
@@ -722,10 +408,6 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
     for (intE i = 0; i < versionNum; i++) {
       versionNumArray[i] = versionStart + i;
     }
-
-    // // std::cout << "\n=== Processing version subset: ";
-    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
@@ -736,14 +418,14 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
 #else
     IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)versionNum;
 #endif
-    intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+    intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
     bool* frontier = pbbs::new_array<bool>(n);
 
     parallel_for(size_t i = 0; i < n; i++) frontier[i] = false;
     for (long i = 0; i < batch_size; i++) frontier[vecQueries[i]] = true;
 
     parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-      WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+      NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     }
 
 #ifndef VERSIONED
@@ -751,7 +433,7 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
       uintE src = vecQueries[i];
       for (intE v = 0; v < versionNum; v++) {
         IdxType idx = ((IdxType)src * versionNum + v);
-        WidestPathVal[idx] = (intE)MAXWIDTH;
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
       }
     }
 #else
@@ -759,7 +441,7 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
       uintE src = vecQueries[i];
       for (intE v = 0; v < versionNum; v++) {
         IdxType idx = ((IdxType)src * batch_size + i) * versionNum + v;
-        WidestPathVal[idx] = (intE)MAXWIDTH;
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
       }
     }
 #endif
@@ -779,10 +461,10 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
       iteration++;
       totalActivated += Frontier.size();
 #ifndef VERSIONED
-      vertexSubset output = edgeMap(G, Frontier, DJ_SKIP_F(WidestPathVal, batch_size), -1, no_dense | remove_duplicates);
+      vertexSubset output = edgeMap(G, Frontier, DJ_SKIP_F(NarrowestPathVal, batch_size), -1, no_dense | remove_duplicates);
 #else
       vertexSubset output = edgeMap(G, Frontier,
-        DJ_SKIP_F(WidestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
+        DJ_SKIP_F(NarrowestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
         -1, no_dense | remove_duplicates);
 #endif
       Frontier.del();
@@ -798,7 +480,6 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
     Frontier.del();
@@ -812,11 +493,11 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
         bool* tmpFrontier = pbbs::new_array<bool>(n);
 
         parallel_for(size_t i = 0; i < n; i++) {
-          tmpVal[i] = (intE)0;  // Initialize to 0
+          tmpVal[i] = (intE)MAXPATH;  // Initialize to MAXPATH
           tmpFrontier[i] = false;
         }
 
-        tmpVal[src] = (intE)MAXWIDTH;  // Set source to MAXWIDTH
+        tmpVal[src] = 0;  // Set source to 0
         tmpFrontier[src] = true;
         vertexSubset Frontier_tmp(n, tmpFrontier);
         timer baseTimer;
@@ -831,28 +512,20 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
         baseTimer.stop();
         baseTime += baseTimer.totalTime;
         Frontier_tmp.del();
-        // intE error = 0;
-        // for (intE node = 0; node < n; node++) {
-        //   IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
-        //   if (WidestPathVal[idx] != tmpVal[node]) {
-        //     error++;
-        //   }
-        // }
-        // std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;
         pbbs::delete_array(tmpVal, n);
       }
     }
     
     pbbs::delete_array(versionNumArray, versionNum);
 #endif
-    pbbs::delete_array(WidestPathVal, totalNumVertices);
+    pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   }
 #ifdef VERSIONED
   std::cout << "\nTotal propagation time (excluding baseline): " << total_propagation_time << " seconds\n";
   std::cout << "Total baseline time: " << baseTime << " seconds\n";
   std::cout << "Speedup: " << baseTime / total_propagation_time << std::endl;
 #endif
-  return make_pair(0, 0); // totalActivated, totalNoOverlap
+  return make_pair(0, 0);
 }
 
 template <class vertex>
@@ -861,29 +534,25 @@ pair<size_t, size_t> Compute_Delay(graph<vertex>& G, std::vector<long> vecQuerie
   size_t edge_count = G.m;
   long batch_size = vecQueries.size();
   IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size;
-  intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+  intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
   bool* CurrActiveArray = pbbs::new_array<bool>(totalNumVertices);
   bool* NextActiveArray = pbbs::new_array<bool>(totalNumVertices);
   bool* frontier = pbbs::new_array<bool>(n);
   parallel_for(size_t i = 0; i < n; i++) {
     frontier[i] = false;
   }
-  // for delaying initialization
   for(long i = 0; i < batch_size; i++) {
     if (defer_vec[i] == 0) {
       frontier[vecQueries[i]] = true;
     }
   }
-  // for(long i = 0; i < batch_size; i++) {
-  //   frontier[vecQueries[i]] = true;
-  // }
   parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-    WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+    NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     CurrActiveArray[i] = false;
     NextActiveArray[i] = false;
   }
   for(long i = 0; i < batch_size; i++) {
-    WidestPathVal[(IdxType)batch_size * (IdxType)vecQueries[i] + (IdxType)i] = (intE)MAXWIDTH;
+    NarrowestPathVal[(IdxType)batch_size * (IdxType)vecQueries[i] + (IdxType)i] = 0;  // Set source nodes to 0
   }
   for(size_t i = 0; i < batch_size; i++) {
     if (defer_vec[i] == 0) {
@@ -893,7 +562,6 @@ pair<size_t, size_t> Compute_Delay(graph<vertex>& G, std::vector<long> vecQuerie
 
   vertexSubset Frontier(n, frontier);
 
-  // for profiling
   long iteration = 0;
   size_t totalActivated = 0;
 
@@ -901,23 +569,11 @@ pair<size_t, size_t> Compute_Delay(graph<vertex>& G, std::vector<long> vecQuerie
     iteration++;
     totalActivated += Frontier.size();
 
-    // mode: no_dense, remove_duplicates (for batch size > 1)
-    vertexSubset output = edgeMap(G, Frontier, DJ_F(WidestPathVal, CurrActiveArray, NextActiveArray, batch_size), -1, no_dense|remove_duplicates);
+    vertexSubset output = edgeMap(G, Frontier, DJ_F(NarrowestPathVal, CurrActiveArray, NextActiveArray, batch_size), -1, no_dense|remove_duplicates);
 
     Frontier.del();
     Frontier = output;
 
-    // Checking for delayed queries.
-    // TODO: possibly optimization.
-    // timer t_checking;
-    // t_checking.start();
-    // Frontier.toDense();
-    // bool* new_d = pbbs::new_array<bool>(n);
-    // parallel_for(size_t i = 0; i < n; i++) {
-    //   new_d[i] = Frontier.d[i];
-    // }
-
-    
     Frontier.toDense();
     bool* new_d = Frontier.d;
     Frontier.d = nullptr;
@@ -930,8 +586,6 @@ pair<size_t, size_t> Compute_Delay(graph<vertex>& G, std::vector<long> vecQuerie
     vertexSubset Frontier_new(n, new_d);
     Frontier.del();
     Frontier = Frontier_new;
-    // t_checking.stop();
-    // t_checking.reportTotal("checking delaying");
 
     std::swap(CurrActiveArray, NextActiveArray);
     parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
@@ -939,23 +593,10 @@ pair<size_t, size_t> Compute_Delay(graph<vertex>& G, std::vector<long> vecQuerie
     }
   }
 
-#ifdef OUTPUT 
-  for (int i = 0; i < batch_size; i++) {
-    long start = vecQueries[i];
-    char outFileName[300];
-    sprintf(outFileName, "SSSP_delay_output_src%ld.%ld.%ld.out", start, edge_count, batch_size);
-    FILE *fp;
-    fp = fopen(outFileName, "w");
-    for (long j = 0; j < n; j++)
-      fprintf(fp, "%ld %d\n", j, WidestPathVal[j * batch_size + i]);
-    fclose(fp);
-  }
-#endif
-
   Frontier.del();
   pbbs::delete_array(CurrActiveArray, totalNumVertices);
   pbbs::delete_array(NextActiveArray, totalNumVertices);
-  pbbs::delete_array(WidestPathVal, totalNumVertices);
+  pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   return make_pair(totalActivated, 0);
 }
 
@@ -965,10 +606,10 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
   std::vector<int> defer_vec, bool should_profile)
 {
 #ifdef VERSIONED
-  // auto totalVersion = G.batchNum + 1;
   auto totalVersion = G.batchNum;
   auto parallelVersionNum = P.getOptionIntValue("-parallelVersion", 4);
   double total_propagation_time = 0.0;
+  double baseTime = 0.0;
 
   for (intE versionStart = 0; versionStart < totalVersion; versionStart += parallelVersionNum) {
     intE versionNum = std::min<intE>(parallelVersionNum, totalVersion - versionStart);
@@ -976,17 +617,13 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
     for (intE i = 0; i < versionNum; i++) {
       versionNumArray[i] = versionStart + i;
     }
-
-    // std::cout << "\n=== Processing version subset: ";
-    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
     long batch_size = vecQueries.size();
     IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)versionNum;
 
-    intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+    intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
     bool* frontier = pbbs::new_array<bool>(n);
 
     parallel_for(size_t i = 0; i < n; i++) {
@@ -1000,14 +637,14 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
     }
 
     parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-      WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+      NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     }
 
     for (long i = 0; i < batch_size; i++) {
       uintE src = vecQueries[i];
       for (intE v = 0; v < versionNum; v++) {
         IdxType idx = ((IdxType)src * batch_size + i) * versionNum + v;
-        WidestPathVal[idx] = (intE)MAXWIDTH;
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
       }
     }
 
@@ -1026,7 +663,7 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
       totalActivated += Frontier.size();
 
       vertexSubset output = edgeMap(G, Frontier,
-        DJ_SKIP_F(WidestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
+        DJ_SKIP_F(NarrowestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
         -1, no_dense | remove_duplicates);
 
       Frontier.del();
@@ -1049,7 +686,6 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
 
@@ -1057,7 +693,7 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
 #ifdef VERSIONED
     pbbs::delete_array(versionNumArray, versionNum);
 #endif
-    pbbs::delete_array(WidestPathVal, totalNumVertices);
+    pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   }
 #ifdef VERSIONED
   std::cout << "\nTotal propagation time (excluding baseline): " << total_propagation_time << " seconds\n";
@@ -1065,8 +701,6 @@ pair<size_t, size_t> Compute_Delay_Skipping(graph<vertex>& G,
   return make_pair(0, 0);
 }
 
-// This function is modified to compute for batch of queries with different versions
-// Value Array now is [node0_{version 0}, node0_{version 1}, node0_{version 2}, node1_{version 0}, node1_{version 1}, node1_{version 2}, ...]
 template <class vertex>
 pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G, 
   std::vector<long> vecQueries, commandLine P, bool should_profile) 
@@ -1086,10 +720,6 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
     for (intE i = 0; i < versionNum; i++) {
       versionNumArray[i] = versionStart + i;
     }
-
-    // std::cout << "\n=== Processing version subset: ";
-    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
@@ -1100,14 +730,14 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
 #else
     IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)versionNum;
 #endif
-    intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+    intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
     bool* frontier = pbbs::new_array<bool>(n);
 
     parallel_for(size_t i = 0; i < n; i++) frontier[i] = false;
     for (long i = 0; i < batch_size; i++) frontier[vecQueries[i]] = true;
 
     parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-      WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+      NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     }
 
 #ifndef VERSIONED
@@ -1115,7 +745,7 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
       uintE src = vecQueries[i];
       for (intE v = 0; v < versionNum; v++) {
         IdxType idx = ((IdxType)src * versionNum + v);
-        WidestPathVal[idx] = (intE)MAXWIDTH;
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
       }
     }
 #else
@@ -1123,7 +753,7 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
       uintE src = vecQueries[i];
       for (intE v = 0; v < versionNum; v++) {
         IdxType idx = ((IdxType)src * batch_size + i) * versionNum + v;
-        WidestPathVal[idx] = (intE)MAXWIDTH;
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
       }
     }
 #endif
@@ -1143,10 +773,10 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
       iteration++;
       totalActivated += Frontier.size();
 #ifndef VERSIONED
-      vertexSubset output = edgeMap(G, Frontier, DJ_SKIP_F(WidestPathVal, batch_size), -1, no_dense | remove_duplicates);
+      vertexSubset output = edgeMap(G, Frontier, DJ_SKIP_F(NarrowestPathVal, batch_size), -1, no_dense | remove_duplicates);
 #else
       vertexSubset output = edgeMap(G, Frontier,
-        DJ_SKIP_F(WidestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
+        DJ_SKIP_F(NarrowestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
         -1, no_dense | remove_duplicates);
 #endif
       Frontier.del();
@@ -1162,7 +792,6 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
     Frontier.del();
@@ -1176,11 +805,11 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
         bool* tmpFrontier = pbbs::new_array<bool>(n);
 
         parallel_for(size_t i = 0; i < n; i++) {
-          tmpVal[i] = (intE)0;  // Initialize to 0
+          tmpVal[i] = (intE)MAXPATH;  // Initialize to MAXPATH
           tmpFrontier[i] = false;
         }
 
-        tmpVal[src] = (intE)MAXWIDTH;  // Set source to MAXWIDTH
+        tmpVal[src] = 0;  // Set source to 0
         tmpFrontier[src] = true;
         vertexSubset Frontier_tmp(n, tmpFrontier);
         timer baseTimer;
@@ -1197,11 +826,11 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
         intE error = 0;
         for (intE node = 0; node < n; node++) {
           IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
-          if (WidestPathVal[idx] != tmpVal[node]) {
+          if (NarrowestPathVal[idx] != tmpVal[node]) {
             error++;
           }
         }
-        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;        
+        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }
@@ -1209,7 +838,7 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
     
     pbbs::delete_array(versionNumArray, versionNum);
 #endif
-    pbbs::delete_array(WidestPathVal, totalNumVertices);
+    pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   }
 #ifdef VERSIONED
   return make_pair(total_propagation_time, baseTime);
@@ -1224,7 +853,6 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
   std::vector<int> defer_vec, bool should_profile)
 {
 #ifdef VERSIONED
-  // auto totalVersion = G.batchNum + 1;
   auto totalVersion = G.batchNum;
   auto parallelVersionNum = P.getOptionIntValue("-parallelVersion", 4);
   double total_propagation_time = 0.0;
@@ -1236,17 +864,13 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
     for (intE i = 0; i < versionNum; i++) {
       versionNumArray[i] = versionStart + i;
     }
-
-    // std::cout << "\n=== Processing version subset: ";
-    // for (intE i = 0; i < versionNum; i++) std::cout << versionNumArray[i] << " ";
-    // std::cout << "===\n";
 #endif
 
     size_t n = G.n;
     long batch_size = vecQueries.size();
     IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size * (IdxType)versionNum;
 
-    intE* WidestPathVal = pbbs::new_array<intE>(totalNumVertices);
+    intE* NarrowestPathVal = pbbs::new_array<intE>(totalNumVertices);
     bool* frontier = pbbs::new_array<bool>(n);
 
     parallel_for(size_t i = 0; i < n; i++) {
@@ -1260,14 +884,14 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
     }
 
     parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
-      WidestPathVal[i] = (intE)0;  // Initialize all nodes to 0
+      NarrowestPathVal[i] = (intE)MAXPATH;  // Initialize all nodes to MAXPATH
     }
 
     for (long i = 0; i < batch_size; i++) {
       uintE src = vecQueries[i];
       for (intE v = 0; v < versionNum; v++) {
         IdxType idx = ((IdxType)src * batch_size + i) * versionNum + v;
-        WidestPathVal[idx] = (intE)MAXWIDTH;
+        NarrowestPathVal[idx] = 0;  // Set source nodes to 0
       }
     }
 
@@ -1286,7 +910,7 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
       totalActivated += Frontier.size();
 
       vertexSubset output = edgeMap(G, Frontier,
-        DJ_SKIP_F(WidestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
+        DJ_SKIP_F(NarrowestPathVal, batch_size, totalVersion, versionNum, versionNumArray),
         -1, no_dense | remove_duplicates);
 
       Frontier.del();
@@ -1309,7 +933,6 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
 
 #ifdef VERSIONED
     t_propagate.stop();
-    // std::cout << "Propagation time for version subset: " << t_propagate.totalTime << " seconds" << std::endl;
     total_propagation_time += t_propagate.totalTime;
 #endif
 
@@ -1324,11 +947,11 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
         bool* tmpFrontier = pbbs::new_array<bool>(n);
 
         parallel_for(size_t i = 0; i < n; i++) {
-          tmpVal[i] = (intE)0;  // Initialize to 0
+          tmpVal[i] = (intE)MAXPATH;  // Initialize to MAXPATH
           tmpFrontier[i] = false;
         }
 
-        tmpVal[src] = (intE)MAXWIDTH;  // Set source to MAXWIDTH
+        tmpVal[src] = 0;  // Set source to 0
         tmpFrontier[src] = true;
         vertexSubset Frontier_tmp(n, tmpFrontier);
         timer baseTimer;
@@ -1345,11 +968,11 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
         intE error = 0;
         for (intE node = 0; node < n; node++) {
           IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
-          if (WidestPathVal[idx] != tmpVal[node]) {
+          if (NarrowestPathVal[idx] != tmpVal[node]) {
             error++;
           }
         }
-        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;        
+        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }
@@ -1357,7 +980,7 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
     
     pbbs::delete_array(versionNumArray, versionNum);
 #endif
-    pbbs::delete_array(WidestPathVal, totalNumVertices);
+    pbbs::delete_array(NarrowestPathVal, totalNumVertices);
   }
 #ifdef VERSIONED
   return make_pair(total_propagation_time, baseTime);
@@ -1365,3 +988,15 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
   return make_pair(0.0, 0.0);
 #endif  
 }
+
+template <class vertex>
+uintE* Compute_Eval(graph<vertex>& G, std::vector<long> vecQueries, commandLine P) {
+  size_t n = G.n;
+  long batch_size = vecQueries.size();
+  IdxType totalNumVertices = (IdxType)n * (IdxType)batch_size;
+  uintE* Hops = pbbs::new_array<uintE>(totalNumVertices);
+  parallel_for(IdxType i = 0; i < totalNumVertices; i++) {
+    Hops[i] = 0;  // 初始化为0
+  }
+  return Hops;
+} 
