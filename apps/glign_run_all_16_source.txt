@@ -1,0 +1,2 @@
+nohup: ignoring input
+Cannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate spaceCannot allocate space

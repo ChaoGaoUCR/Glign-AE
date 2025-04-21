@@ -823,14 +823,14 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
         }
         baseTimer.stop();
         baseTime += baseTimer.totalTime;
-        intE error = 0;
-        for (intE node = 0; node < n; node++) {
-          IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
-          if (NarrowestPathVal[idx] != tmpVal[node]) {
-            error++;
-          }
-        }
-        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;          
+        // intE error = 0;
+        // for (intE node = 0; node < n; node++) {
+        //   IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
+        //   if (NarrowestPathVal[idx] != tmpVal[node]) {
+        //     error++;
+        //   }
+        // }
+        // std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }
@@ -965,14 +965,14 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
         }
         baseTimer.stop();
         baseTime += baseTimer.totalTime;
-        intE error = 0;
-        for (intE node = 0; node < n; node++) {
-          IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
-          if (NarrowestPathVal[idx] != tmpVal[node]) {
-            error++;
-          }
-        }
-        std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;          
+        // intE error = 0;
+        // for (intE node = 0; node < n; node++) {
+        //   IdxType idx = ((IdxType)node * batch_size + query) * versionNum + v;
+        //   if (NarrowestPathVal[idx] != tmpVal[node]) {
+        //     error++;
+        //   }
+        // }
+        // std::cout << "query: " << query << " version: " << version << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }

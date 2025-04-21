@@ -63,6 +63,14 @@
         "compare": "cpp",
         "concepts": "cpp",
         "ranges": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "fusion_wcc.C": "cpp",
+        "fusion_viterbi.C": "cpp",
+        "fusion_test.C": "cpp",
+        "fusion_sswp.C": "cpp",
+        "BFS.C": "cpp",
+        "fusion_bfs.C": "cpp",
+        "fusion_ssnp.C": "cpp",
+        "fusion_ssr.C": "cpp"
     }
 }

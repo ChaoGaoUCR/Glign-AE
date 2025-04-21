@@ -1,0 +1,2 @@
+nohup: ignoring input
+Glignlog.sh: line 19: 25456 Killed                  ./fusion_sssp -option glign -batch 64 -max_combination 64 -mode 2 -delay -qf /home/cgao037/RisGraph/source/dl_src.txt -batchNum 64 -batchRatio 0.0025 -parallelVersion 1 /home/cgao037/graph/dl/snap_dl.adj.weight > glignLogs/dl_fusion_sssp_batch64.txt

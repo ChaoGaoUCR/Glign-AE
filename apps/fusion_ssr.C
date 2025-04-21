@@ -26,8 +26,8 @@ struct SSR_F {
       }
       for (long j = 0; j < BatchSize; j++) 
       {
-        IdxType s_index = s * (versionNum * BatchSize) + v + versionNum * j;
-        IdxType d_index = d * (versionNum * BatchSize) + v + versionNum * j;
+        IdxType s_index = ((IdxType)s * BatchSize + j) * versionNum + v;
+        IdxType d_index = ((IdxType)d * BatchSize + j) * versionNum + v;
 
         if (CurrActiveArray[s_index]) {
           uintE newValue = (Reachable[s_index] > 0 || Reachable[d_index] > 0) ? 1 : 0;
@@ -51,8 +51,8 @@ struct SSR_F {
         if (!graphUtils::validate(v, (versionNum - 1), versionTag)) {
           continue;
         }
-        IdxType s_index = s * (versionNum * BatchSize) + v + versionNum * j;
-        IdxType d_index = d * (versionNum * BatchSize) + v + versionNum * j;
+        IdxType s_index = ((IdxType)s * BatchSize + j) * versionNum + v;
+        IdxType d_index = ((IdxType)d * BatchSize + j) * versionNum + v;
 
         if (CurrActiveArray[s_index]) 
         {
@@ -367,15 +367,15 @@ pair<size_t, size_t> Compute_Base_Skipping(graph<vertex>& G,
         }
         baseTimer.stop();
         baseTime += baseTimer.totalTime;
-        intE error = 0;
-        for (intE node = 0; node < n; node++) {
-          IdxType idx = ((IdxType)node * batch_size * versionNum) + 
-                       ((IdxType)query * versionNum) + v;
-          if (Reachable[idx] != tmpVal[node]) {
-            error++;
-          }
-        }
-        std::cout << "query: " << query << " version: " << versionNumArray[v] << " error: " << error << std::endl;          
+        // intE error = 0;
+        // for (intE node = 0; node < n; node++) {
+        //   IdxType idx = ((IdxType)node * batch_size * versionNum) + 
+        //                ((IdxType)query * versionNum) + v;
+        //   if (Reachable[idx] != tmpVal[node]) {
+        //     error++;
+        //   }
+        // }
+        // std::cout << "query: " << query << " version: " << versionNumArray[v] << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }
@@ -619,15 +619,15 @@ pair<double, double> Compute_Delay_Skipping_Time(graph<vertex>& G,
         }
         baseTimer.stop();
         baseTime += baseTimer.totalTime;
-        intE error = 0;
-        for (intE node = 0; node < n; node++) {
-          IdxType idx = ((IdxType)node * (IdxType)batch_size * (IdxType)versionNum) + 
-                       ((IdxType)query * (IdxType)versionNum) + v;
-          if (Reachable[idx] != tmpVal[node]) {
-            error++;
-          }
-        }
-        std::cout << "query: " << query << " version: " << versionNumArray[v] << " error: " << error << std::endl;          
+        // intE error = 0;
+        // for (intE node = 0; node < n; node++) {
+        //   IdxType idx = ((IdxType)node * (IdxType)batch_size * (IdxType)versionNum) + 
+        //                ((IdxType)query * (IdxType)versionNum) + v;
+        //   if (Reachable[idx] != tmpVal[node]) {
+        //     error++;
+        //   }
+        // }
+        // std::cout << "query: " << query << " version: " << versionNumArray[v] << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }
@@ -741,15 +741,15 @@ pair<double, double> Compute_Base_Skipping_Time(graph<vertex>& G,
         }
         baseTimer.stop();
         baseTime += baseTimer.totalTime;
-        intE error = 0;
-        for (intE node = 0; node < n; node++) {
-          IdxType idx = ((IdxType)node * (IdxType)batch_size * (IdxType)versionNum) + 
-                       ((IdxType)query * (IdxType)versionNum) + v;
-          if (Reachable[idx] != tmpVal[node]) {
-            error++;
-          }
-        }
-        std::cout << "query: " << query << " version: " << versionNumArray[v] << " error: " << error << std::endl;          
+        // intE error = 0;
+        // for (intE node = 0; node < n; node++) {
+        //   IdxType idx = ((IdxType)node * (IdxType)batch_size * (IdxType)versionNum) + 
+        //                ((IdxType)query * (IdxType)versionNum) + v;
+        //   if (Reachable[idx] != tmpVal[node]) {
+        //     error++;
+        //   }
+        // }
+        // std::cout << "query: " << query << " version: " << versionNumArray[v] << " error: " << error << std::endl;          
         Frontier_tmp.del();
         pbbs::delete_array(tmpVal, n);
       }
